@@ -31,6 +31,38 @@ function insertFileMetaToDb(fileMeta, callback) {
         fileMeta.fileName, fileMeta.fileSize, fileMeta.hash, fileMeta.status, callback)
 }
 
+/**
+ * Inserts a file metadata row into the database if mathching one doesn't already exist.
+ * Signature of the callback is function(recordAdded) {}.
+ * 
+ * @param {Object} fileMeta File metadata object.
+ * @param {Function} callback Callback function with signature function(Boolean) {}.
+ */
+function insertFileMetaToDbIfNotExists(fileMeta, callback) {
+    getMediaIdForMeta(fileMeta, (err, row) => {
+        if (err) {
+            console.log(err)
+            callback(false)
+        }
+        else {
+            if (!row) {
+                insertFileMetaToDb(fileMeta, err => {
+                    if (err) {
+                        console.log(err)
+                        callback(false)
+                    }
+                    else {
+                        callback(true)
+                    }
+                })
+            }
+            else {
+                callback(false)
+            }
+        }
+    })
+}
+
 function prepareDatabase(callback) {
     // Create / update schema
     let createMediaTable = `CREATE TABLE IF NOT EXISTS "media" (
@@ -52,9 +84,9 @@ function prepareDatabase(callback) {
     })
 
     // TODO Remove this emptying of DB once there is sensible logic in place to detect existing files
-    db.exec("DELETE FROM media")
+    //db.exec("DELETE FROM media")
 
-    console.log("INIT - Database prepared")
+    console.log("INIT / DB - Database prepared")
 }
 
 module.exports = {
@@ -63,5 +95,6 @@ module.exports = {
     insertFileMetaToDb: insertFileMetaToDb,
     updateMediaStatus: updateMediaStatus,
     getMediaForId: getMediaForId,
-    getMediaIdForMeta: getMediaIdForMeta
+    getMediaIdForMeta: getMediaIdForMeta,
+    insertFileMetaToDbIfNotExists: insertFileMetaToDbIfNotExists
 }

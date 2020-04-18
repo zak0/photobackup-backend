@@ -27,5 +27,5 @@ app.post("/", (req, res, next) => {
 app.use(require("./routes/media"))
 
 app.listen(port, () => {
-    console.log(`INIT - Server listening on port ${port}...`)
+    console.log(`INIT / Server - Server listening on port ${port}...`)
 })
