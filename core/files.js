@@ -1,3 +1,7 @@
+/*
+ Wrapper for file system access.
+*/
+
 const fs = require("fs")
 const path = require("path")
 const md5 = require("md5-file")
@@ -5,9 +9,15 @@ const md5 = require("md5-file")
 const constants = require("./constants")
 const db = require("../db/db")
 const config = require("../config")
+const processor = require("./processor")
 
 /**
- * Scans the library files directory for image files. Image files are detected by their extension (see constants.fileExtensions).
+ * Scans the library files directory for image files. Image files are detected by their extension
+ * (see constants.fileExtensions).
+ * 
+ * When new files are detected, they are processed and added into the database.
+ * 
+ * TODO - When previously existing files are deleted, they will be removed from the database.
  */
 function scanLibrary() {
     let files = fs.readdirSync(config.mediaDir)
@@ -34,7 +44,7 @@ function scanLibrary() {
                 "fileName": fileName,
                 "fileSize": stat.size,
                 "hash": hash,
-                "status": constants.MediaState.STATE_READY
+                "status": constants.MediaState.STATE_PROCESSING
             }
             db.insertFileMetaToDbIfNotExists(file, didNotExist => {
                 if (didNotExist) {
@@ -44,6 +54,7 @@ function scanLibrary() {
                 if (++handledFilesCount >= filesCount) {
                     let scanDuration = Date.now() - scanStartTime
                     console.log("INIT / Files - Scan completed in " + scanDuration + " ms. " + newFileCount + " new files detected.")
+                    processor.processIfNeeded()
                 }
             })
         })

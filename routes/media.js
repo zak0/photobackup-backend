@@ -17,13 +17,7 @@ app.get("/media", (req, res) => {
         else {
             let files = []
             rows.forEach(row => {
-                files.push({
-                    "id": row.id,
-                    "fileName": row.filename,
-                    "fileSize": row.filesize,
-                    "hash": row.hash,
-                    "status": row.status
-                })
+                files.push(rowToFileMeta(row))
             })
 
             res.json({
@@ -42,13 +36,7 @@ app.get("/media/:id", (req, res) => {
             res.sendStatus(500)
         }
         else if (row) {
-            res.json({
-                "id": row.id,
-                "fileName": row.filename,
-                "fileSize": row.filesize,
-                "hash": row.hash,
-                "status": row.status
-            })
+            res.json(rowToFileMeta(row))
         }
         else {
             res.sendStatus(404)
@@ -123,13 +111,7 @@ app.post("/media/:id/file", (req, res) => {
             res.sendStatus(500)
         }
         else {
-            let media = {
-                "id": row.id,
-                "fileName": row.filename,
-                "fileSize": row.filesize,
-                "hash": row.hash,
-                "status": row.status
-            }
+            let media = rowToFileMeta(row)
 
             // Check that media entry is in "upload_pending" state
             if (media.status == constants.MediaState.STATE_UPLOAD_PENDING) {
@@ -171,3 +153,19 @@ app.delete("/media/:id", (req, res) => {
     // TODO Change its state to "in_trash"
     // TODO Store the media into list of media in trash can with date
 })
+
+/**
+ * Constructs a file metadata object from a row retrieved from the database.
+ * 
+ * @param {Object} row Row as read from the database
+ */
+function rowToFileMeta(row) {
+    return {
+        "id": row.id,
+        "fileName": row.filename,
+        "thumbnailName": row.thumbnailname,
+        "fileSize": row.filesize,
+        "hash": row.hash,
+        "status": row.status
+    }
+}

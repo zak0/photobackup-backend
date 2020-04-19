@@ -5,6 +5,9 @@ const config = require("./config")
 const app = express()
 const db = require("./db/db")
 
+// Start the initialization phase.
+// First prepares the database, then scans the filesystem for changes and
+// triggers appropriate actions if changes are detected.
 db.prepareDatabase( _ => {
     files.scanLibrary()
 })

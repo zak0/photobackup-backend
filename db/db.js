@@ -1,5 +1,10 @@
+/*
+ Wrapper for database access
+*/
+
 const sqlite3 = require("sqlite3")
 const metaDir = require("../config").metaDir
+const constants = require("../core/constants")
 const dbFile = metaDir + "/db.db"
 
 const db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, err => {
@@ -9,11 +14,15 @@ const db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
 })
 
 function getAllMedia(callback) {
-    db.all("SELECT id, filename, filesize, hash, status FROM media", callback)
+    db.all("SELECT id, filename, thumbnailname, filesize, hash, status FROM media", callback)
+}
+
+function getAllMediaForProcessing(callback) {
+    db.all("SELECT id, filename FROM media WHERE status = ?", constants.MediaState.STATE_PROCESSING, callback)
 }
 
 function getMediaForId(id, callback) {
-    db.get("SELECT id, filename, filesize, hash, status FROM media WHERE id = ?", id, callback)
+    db.get("SELECT id, filename, thumbnailname, filesize, hash, status FROM media WHERE id = ?", id, callback)
 }
 
 function getMediaIdForMeta(fileMeta, callback) {
@@ -23,6 +32,10 @@ function getMediaIdForMeta(fileMeta, callback) {
 
 function updateMediaStatus(fileMeta, callback) {
     db.run(`UPDATE media SET status = ? WHERE id = ?`, [fileMeta.status, fileMeta.id], callback)
+}
+
+function updateThumbnail(id, thumbnailName, callback) {
+    db.run(`UPDATE media SET thumbnailname = ? WHERE id = ?`, [thumbnailName, id], callback)
 }
 
 function insertFileMetaToDb(fileMeta, callback) {
@@ -68,6 +81,7 @@ function prepareDatabase(callback) {
     let createMediaTable = `CREATE TABLE IF NOT EXISTS "media" (
         "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "filename"	TEXT,
+        "thumbnailname" TEXT,
         "filesize"	INTEGER,
         "hash"	TEXT,
         "status"	TEXT DEFAULT "unknown",
@@ -92,8 +106,10 @@ function prepareDatabase(callback) {
 module.exports = {
     prepareDatabase: prepareDatabase,
     getAllMedia: getAllMedia,
+    getAllMediaForProcessing: getAllMediaForProcessing,
     insertFileMetaToDb: insertFileMetaToDb,
     updateMediaStatus: updateMediaStatus,
+    updateThumbnail: updateThumbnail,
     getMediaForId: getMediaForId,
     getMediaIdForMeta: getMediaIdForMeta,
     insertFileMetaToDbIfNotExists: insertFileMetaToDbIfNotExists
