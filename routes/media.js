@@ -1,5 +1,7 @@
 const app = module.exports = require("express")()
 const fileUpload = require("express-fileupload")
+/** This is a class from node-exif, hence the weird require. Usef for exit data extraction. */
+const ExifImage = require("exif").ExifImage
 
 const db = require("../db/db")
 const config = require("../config")
@@ -62,7 +64,29 @@ app.get("/media/:id/file", (req, res) => {
             res.sendStatus(404)
         }
     })
+})
 
+app.get("/media/:id/exif", (req, res) => {
+    let id = req.params.id
+    
+    db.getMediaForId(id, (err, row) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            let filePath = config.mediaDir + "/" + row.filename
+
+            new ExifImage({ image: filePath }, (err, exif) => {
+                if (err) {
+                    console.log(err)
+                    res.sendStatus(404)
+                }
+                else {
+                    res.json(exif)
+                }
+            })
+        }
+    })
 })
 
 app.post("/media", (req, res) => {
