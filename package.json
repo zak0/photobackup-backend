@@ -11,6 +11,7 @@
   "author": "Jaakko Jääskä",
   "license": "ISC",
   "dependencies": {
+    "exif": "^0.6.0",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.7-alpha.3",
     "md5-file": "^5.0.0",

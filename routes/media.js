@@ -166,6 +166,7 @@ function rowToFileMeta(row) {
         "thumbnailName": row.thumbnailname,
         "fileSize": row.filesize,
         "hash": row.hash,
+        "dateTimeOriginal": row.datetimeoriginal,
         "status": row.status
     }
 }

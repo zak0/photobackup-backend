@@ -1,6 +1,7 @@
 const express = require("express")
 const files = require("./core/files")
 const config = require("./config")
+const processor = require("./core/processor")
 
 const app = express()
 const db = require("./db/db")
@@ -9,7 +10,9 @@ const db = require("./db/db")
 // First prepares the database, then scans the filesystem for changes and
 // triggers appropriate actions if changes are detected.
 db.prepareDatabase( _ => {
-    files.scanLibrary()
+    files.scanLibrary( _ => {
+        processor.processIfNeeded()
+    })
 })
 
 // By default, parse request bodies as JSON

@@ -9,7 +9,6 @@ const md5 = require("md5-file")
 const constants = require("./constants")
 const db = require("../db/db")
 const config = require("../config")
-const processor = require("./processor")
 
 /**
  * Scans the library files directory for image files. Image files are detected by their extension
@@ -18,8 +17,10 @@ const processor = require("./processor")
  * When new files are detected, they are processed and added into the database.
  * 
  * TODO - When previously existing files are deleted, they will be removed from the database.
+ * 
+ * @param {Function} callback Callback that gets called when scan completes. Has signature function() {}.
  */
-function scanLibrary() {
+function scanLibrary(callback) {
     let files = fs.readdirSync(config.mediaDir)
     let filesCount = files.length
     var newFileCount = 0
@@ -54,10 +55,31 @@ function scanLibrary() {
                 if (++handledFilesCount >= filesCount) {
                     let scanDuration = Date.now() - scanStartTime
                     console.log("INIT / Files - Scan completed in " + scanDuration + " ms. " + newFileCount + " new files detected.")
-                    processor.processIfNeeded()
+
+                    callback()
                 }
             })
         })
+    })
+}
+
+/**
+ * Attempts to fetch the time when a file was created through filesystem
+ * stats.
+ * 
+ * NOTE! This time is UTC. Timezone information is lost.
+ * TODO Consider the need to convert this to local time of the server
+ * 
+ * @param {String} filePath Absolute or relative path to the file to resolve.
+ */
+function getCreateTime(filePath, callback) {
+    fs.stat(filePath, (err, stat) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            callback(Math.round(stat.ctimeMs))
+        }
     })
 }
 
@@ -72,5 +94,6 @@ function isImage(fileName) {
 }
 
 module.exports = {
-    scanLibrary: scanLibrary
+    scanLibrary: scanLibrary,
+    getCreateTime: getCreateTime
 }
