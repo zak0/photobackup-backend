@@ -66,6 +66,26 @@ app.get("/media/:id/file", (req, res) => {
     })
 })
 
+app.get("/media/:id/thumbnail", (req, res) => {
+    let id = req.params.id
+    let options = {
+        root: config.metaDir + "/thumbs"
+    }
+
+    db.getMediaForId(id, (err, row) => {
+        if (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }
+        else if (row) {
+            res.sendFile(row.thumbnailname, options)
+        }
+        else {
+            res.sendStatus(404)
+        }
+    })
+})
+
 app.get("/media/:id/exif", (req, res) => {
     let id = req.params.id
     
