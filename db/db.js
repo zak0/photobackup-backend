@@ -14,7 +14,7 @@ const db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
 })
 
 function getAllMedia(callback) {
-    db.all("SELECT id, filename, thumbnailname, filesize, datetimeoriginal, hash, status FROM media", callback)
+    db.all("SELECT id, filename, filesize, datetimeoriginal, hash, status FROM media", callback)
 }
 
 function getAllMediaForProcessing(callback) {
@@ -22,7 +22,7 @@ function getAllMediaForProcessing(callback) {
 }
 
 function getMediaForId(id, callback) {
-    db.get("SELECT id, filename, thumbnailname, filesize, datetimeoriginal, hash, status FROM media WHERE id = ?", id, callback)
+    db.get("SELECT id, filename, filesize, datetimeoriginal, hash, status FROM media WHERE id = ?", id, callback)
 }
 
 function getMediaIdForMeta(fileMeta, callback) {
@@ -36,10 +36,6 @@ function updateMediaStatus(fileMeta, callback) {
 
 function updateMediaTime(id, dateTimeOriginal, callback) {
     db.run(`UPDATE media SET datetimeoriginal = ? WHERE id = ?`, [dateTimeOriginal, id], callback)
-}
-
-function updateThumbnail(id, thumbnailName, callback) {
-    db.run(`UPDATE media SET thumbnailname = ? WHERE id = ?`, [thumbnailName, id], callback)
 }
 
 function insertFileMetaToDb(fileMeta, callback) {
@@ -85,7 +81,6 @@ function prepareDatabase(callback) {
     let createMediaTable = `CREATE TABLE IF NOT EXISTS "media" (
         "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "filename"	TEXT,
-        "thumbnailname" TEXT,
         "filesize"	INTEGER,
         "hash"	TEXT,
         "status"	TEXT DEFAULT "unknown",
@@ -114,7 +109,6 @@ module.exports = {
     insertFileMetaToDb: insertFileMetaToDb,
     updateMediaStatus: updateMediaStatus,
     updateMediaTime: updateMediaTime,
-    updateThumbnail: updateThumbnail,
     getMediaForId: getMediaForId,
     getMediaIdForMeta: getMediaIdForMeta,
     insertFileMetaToDbIfNotExists: insertFileMetaToDbIfNotExists

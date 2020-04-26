@@ -72,19 +72,16 @@ app.get("/media/:id/thumbnail", (req, res) => {
     let options = {
         root: config.metaDir + "/thumbs"
     }
+    let thumbnailname = `${id}_thumb.jpg`
 
-    db.getMediaForId(id, (err, row) => {
-        if (err) {
-            console.log(err)
-            res.sendStatus(500)
-        }
-        else if (row) {
-            res.sendFile(row.thumbnailname, options)
-        }
-        else {
-            res.sendStatus(404)
-        }
-    })
+    try {
+
+        res.sendFile(thumbnailname, options)
+    }
+    catch (error) {
+        console.log(error)
+        res.sendStatus(404)
+    }
 })
 
 app.get("/media/:id/exif", (req, res) => {
@@ -214,7 +211,6 @@ function rowToFileMeta(row) {
     return {
         "id": row.id,
         "fileName": row.filename,
-        "thumbnailName": row.thumbnailname,
         "fileSize": row.filesize,
         "hash": row.hash,
         "dateTimeOriginal": row.datetimeoriginal,
