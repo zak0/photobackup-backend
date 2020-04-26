@@ -64,7 +64,7 @@ function scanLibrary(callback) {
 }
 
 /**
- * Attempts to fetch the time when a file was created through filesystem
+ * Attempts to fetch the time when a file was modified through filesystem
  * stats.
  * 
  * NOTE! This time is UTC. Timezone information is lost.
@@ -78,7 +78,7 @@ function getCreateTime(filePath, callback) {
             console.log(err)
         }
         else {
-            callback(Math.round(stat.ctimeMs))
+            callback(Math.round(stat.mtimeMs))
         }
     })
 }

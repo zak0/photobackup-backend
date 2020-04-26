@@ -12,22 +12,34 @@ const constants = require("../core/constants")
 app.use("/media/:id/file", fileUpload())
 
 app.get("/media", (req, res) => {
-    db.getAllMedia((err, rows) => {
+    let offset = req.query.offset ? req.query.offset : 0
+    let limit = req.query.limit ? req.query.limit : config.defaultResponsePageSize
 
-        if (err) {
-            console.log(err)
-        }
-        else {
-            let files = []
-            rows.forEach(row => {
-                files.push(rowToFileMeta(row))
-            })
+    // TODO Also consider ensuring that offset and limit are numbers
+    if (offset < 0 || limit < 0) {
+        res.sendStatus(400)
+    }
 
-            res.json({
-                "files": files
-            })
-        }
-    })
+    else {
+        console.log(`offset: ${offset}, limit: ${limit}`)
+
+        db.getAllMedia(offset, limit, (err, rows) => {
+
+            if (err) {
+                console.log(err)
+            }
+            else {
+                let files = []
+                rows.forEach(row => {
+                    files.push(rowToFileMeta(row))
+                })
+
+                res.json({
+                    "files": files
+                })
+            }
+        })
+    }
 })
 
 app.get("/media/:id", (req, res) => {

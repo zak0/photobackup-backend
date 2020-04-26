@@ -13,8 +13,9 @@ const db = new sqlite3.Database(dbFile, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
     }
 })
 
-function getAllMedia(callback) {
-    db.all("SELECT id, filename, filesize, datetimeoriginal, hash, status FROM media", callback)
+function getAllMedia(offset, limit, callback) {
+    db.all(`SELECT id, filename, filesize, datetimeoriginal, hash, status FROM media ORDER BY datetimeoriginal DESC LIMIT ${offset}, ${limit}`,
+            callback)
 }
 
 function getAllMediaForProcessing(callback) {
