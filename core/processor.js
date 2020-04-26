@@ -19,7 +19,7 @@ const thumbsDir = config.metaDir + "/thumbs"
  * 
  * @param {Function} callback Callback for when processing is done. Has signature function(err) {}.
  */
-function processIfNeeded(callback) {
+function processAllUnprocessed(callback) {
     // Fetch all meta data requiring processing
     db.getAllMediaForProcessing((err, rows) => {
         if (err) {
@@ -40,34 +40,7 @@ function generateThumbnails(rows) {
     let processedCount = 0
     let startTime = Date.now()
     rows.forEach(row => {       
-        let filePath = config.mediaDir + "/" + row.filename
-
-        thumb({
-            source: filePath,
-            destination: thumbsDir,
-            width: 256,
-            quiet: true,
-            digest: false,
-            skip: true,
-            basename: "" + row.id
-        }, (files, err, stdout, stderr) => {
-            if (err) {
-                console.log(err)
-            }
-
-            if (files.length > 0) {
-                let thumbnailFileName = files[0].dstPath.replace(thumbsDir + "/", "")
-                let id = thumbnailFileName.split("_")[0]
-
-                db.updateThumbnail(id, thumbnailFileName, err => {
-                    if (err) {
-                        console.log(err)
-                    }
-                })
-            }
-
-            // TODO Read EXIF and write to exif DB table
-            // TODO Write time taken as metadata timestamp
+        generateThumbnail(row, function () {
             processedCount++
             if (processedCount >= rowsCount) {
                 let duration = Date.now() - startTime
@@ -82,46 +55,104 @@ function extractExif(rows) {
     let processedCount = 0
     let startTime = Date.now()
 
+    rows.forEach(row => {
+        extractCreationTimeFromExif(row, function () {
+            if (++processedCount >= rowsCount) {
+                let duration = Date.now() - startTime
+                console.log("CORE / Processing / EXIF - EXIF extraction completed in " + duration + " ms.")
+            }
+        })
+    })
+}
+
+/**
+ * @param {Object} fileMeta Object with at least `id` and `filename` fielda
+ */
+function processFile(fileMeta) {
+    generateThumbnail(fileMeta)
+
+    extractCreationTimeFromExif(fileMeta, _ => {
+        console.log(`exif read for ${fileMeta}`)
+    })
+}
+
+/**
+ * @param {Object} fileMeta Object with at least `id` and `filename` fields
+ * @param {Function} callback Function without params
+ */
+function generateThumbnail(fileMeta, callback) {
+    let filePath = config.mediaDir + "/" + fileMeta.filename
+
+    thumb({
+        source: filePath,
+        destination: thumbsDir,
+        width: 256,
+        quiet: true,
+        digest: false,
+        skip: true,
+        basename: `${fileMeta.id}`
+    }, (files, err, stdout, stderr) => {
+        if (err) {
+            console.log(err)
+        }
+
+        // Callback doesn't seem to be thread safe in case of successes.
+        // So following part is pointless for now and just cannot work when thumb() call is ongoing
+        // for multiple files simultaneously.
+
+        // else {
+        //     let thumbnailFileName = `${fileMeta.id}_thumb.jpg`
+        //     console.log(`update thumbnail id: ${fileMeta.id}, thumbnailFileName: ${thumbnailFileName}`)
+        //     db.updateThumbnail(fileMeta.id, thumbnailFileName, err => {
+        //         if (err) {
+        //             console.log(err)
+        //         }
+        //     })
+        // }
+
+        if (callback) {
+            callback()
+        }
+    })
+}
+
+/**
+ * @param {Object} fileMeta Object with at least `id` and `filename` fields
+ * @param {Function} callback Function without params
+ */
+function extractCreationTimeFromExif(fileMeta, callback) {
     let onRowHandled = function (id, dateTimeOriginal) {
         db.updateMediaTime(id, dateTimeOriginal)
-
-        if (++processedCount >= rowsCount) {
-            let duration = Date.now() - startTime
-            console.log("CORE / Processing / EXIF - EXIF extraction completed in " + duration + " ms.")
-        }
+        callback()
     }
 
-    rows.forEach(row => {
-        let iterationScope = function (scopedRow) {
-            let filePath = config.mediaDir + "/" + row.filename
+    let filePath = config.mediaDir + "/" + fileMeta.filename
 
-            new ExifImage({ image: filePath }, (err, exif) => {
-                let fallbackToFileTime = function() {
-                    files.getCreateTime(filePath, fileTime => {
-                        let exifTime = util.millisToExifTimeStamp(fileTime)
-                        onRowHandled(scopedRow.id, exifTime)
-                    })
-                }
-
-                if (err) {
-                    console.log(`CORE / Processing / EXIF - Unable to read EXIF for '${row.filename}'. Falling back to file creation time.`)
-                    fallbackToFileTime()
-                }
-                else {
-                    try {
-                        onRowHandled(scopedRow.id, exif.exif.DateTimeOriginal)
-                    }
-                    catch (caughtError) {
-                        console.log(caughtError)
-                        fallbackToFileTime()
-                    }
-                }
+    new ExifImage({ image: filePath }, (err, exif) => {
+        let fallbackToFileTime = function() {
+            files.getCreateTime(filePath, fileTime => {
+                let exifTime = util.millisToExifTimeStamp(fileTime)
+                onRowHandled(fileMeta.id, exifTime)
             })
         }
-        iterationScope(row)
+
+        if (err) {
+            console.log(`CORE / Processing / EXIF - Unable to read EXIF for '${fileMeta.filename}'. Falling back to file creation time.`)
+            fallbackToFileTime()
+        }
+        else {
+            try {
+                onRowHandled(fileMeta.id, exif.exif.DateTimeOriginal)
+            }
+            catch (caughtError) {
+                console.log(caughtError)
+                fallbackToFileTime()
+            }
+        }
     })
 }
 
 module.exports = {
-    processIfNeeded: processIfNeeded
+    processAllUnprocessed: processAllUnprocessed,
+    processFile: processFile
 }

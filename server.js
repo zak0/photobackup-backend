@@ -11,7 +11,7 @@ const db = require("./db/db")
 // triggers appropriate actions if changes are detected.
 db.prepareDatabase( _ => {
     files.scanLibrary( _ => {
-        processor.processIfNeeded()
+        processor.processAllUnprocessed()
     })
 })
 

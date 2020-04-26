@@ -4,6 +4,7 @@ const fileUpload = require("express-fileupload")
 const ExifImage = require("exif").ExifImage
 
 const db = require("../db/db")
+const processor = require("../core/processor")
 const config = require("../config")
 const constants = require("../core/constants")
 
@@ -169,7 +170,6 @@ app.post("/media/:id/file", (req, res) => {
                     }
                     else {
                         // TODO Validate file size and hash after upload
-                        // TODO Trigger thumbnail and exif population
                         media.status = constants.MediaState.STATE_PROCESSING
 
                         db.updateMediaStatus(media, err => {
@@ -179,6 +179,13 @@ app.post("/media/:id/file", (req, res) => {
                             }
                             else {
                                 res.status(201).json(media)
+
+                                // Also now trigger thumbnail gneration and exif population
+                                let fileMeta = {
+                                    id: media.id,
+                                    filename: media.fileName
+                                }
+                                processor.processFile(fileMeta)
                             }
                         })
                     }
