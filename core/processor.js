@@ -4,6 +4,7 @@ Processor for handling file processing such as thumbnail generation and EXIF dat
 
 const thumb = require("node-thumbnail").thumb
 
+const constants = require("./constants")
 const config = require("../config")
 const files = require("./files")
 const db = require("../db/db")
@@ -122,7 +123,11 @@ function generateThumbnail(fileMeta, callback) {
  */
 function extractCreationTimeFromExif(fileMeta, callback) {
     let onRowHandled = function (id, dateTimeOriginal) {
-        db.updateMediaTime(id, dateTimeOriginal)
+        db.updateMediaTime(id, dateTimeOriginal, err => {
+            if (!err) {
+                db.updateMediaStatus({id: id, status: constants.MediaState.STATE_READY})
+            }
+        })
         callback()
     }
 
