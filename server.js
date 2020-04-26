@@ -1,15 +1,22 @@
 const express = require("express")
+const basicAuth = require("express-basic-auth")
+
 const files = require("./core/files")
 const config = require("./config")
 const processor = require("./core/processor")
+const db = require("./db/db")
+const authorizer = require("./routes/authorizer")
 
 const app = express()
-const db = require("./db/db")
+
+// Setup auth
+app.use(basicAuth({ authorizer: authorizer.checkCredentials }))
 
 // Start the initialization phase.
 // First prepares the database, then scans the filesystem for changes and
 // triggers appropriate actions if changes are detected.
 db.prepareDatabase( _ => {
+    authorizer.init()
     files.scanLibrary( _ => {
         processor.processAllUnprocessed()
     })
@@ -21,16 +28,9 @@ app.use(express.json())
 
 const port = config.serverPort
 
-app.post("/", (req, res, next) => {
-    let name = req.body.name
-    let message = `Hello ${name}!`
-    res.json({
-        "message": message
-    })
-})
-
 // Add routes
 app.use(require("./routes/media"))
+app.use(authorizer.routing)
 
 app.listen(port, () => {
     console.log(`INIT / Server - Server listening on port ${port}...`)

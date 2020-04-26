@@ -21,8 +21,6 @@ app.get("/media", (req, res) => {
     }
 
     else {
-        console.log(`offset: ${offset}, limit: ${limit}`)
-
         db.getAllMedia(offset, limit, (err, rows) => {
 
             if (err) {

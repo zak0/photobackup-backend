@@ -77,10 +77,24 @@ function insertFileMetaToDbIfNotExists(fileMeta, callback) {
     })
 }
 
+function getAllUsers(callback) {
+    db.all(`SELECT id, username, password FROM user`, callback)
+}
+
+function getUserForName(username, callback) {
+    db.get(`SELECT id, username FROM user WHERE username = ?`, username, callback)
+}
+
+function insertUser(username, passwordHash, callback) {
+    db.run(`INSERT INTO user (username, password) VALUES (?, ?)`,
+            username, passwordHash, callback)
+}
+
 function prepareDatabase(callback) {
     // Create / update schema
     let createMediaTable = `CREATE TABLE IF NOT EXISTS "media" (
         "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "userid"    INTEGER DEFAULT 0,
         "filename"	TEXT,
         "filesize"	INTEGER,
         "hash"	TEXT,
@@ -88,12 +102,25 @@ function prepareDatabase(callback) {
         "datetimeoriginal"	TEXT
     )`
 
+    let createUserTable = `CREATE TABLE IF NOT EXISTS "user" (
+        "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "username"	TEXT NOT NULL UNIQUE,
+        "password"	TEXT NOT NULL
+    )`
+
     db.exec(createMediaTable, err => {
         if (err) {
             console.log(err)
         }
         else {
-            callback()
+            db.exec(createUserTable, err => {
+                if (err) {
+                    console.log(err)
+                }
+                else {
+                    callback()
+                }
+            })
         }
     })
 
@@ -112,5 +139,8 @@ module.exports = {
     updateMediaTime: updateMediaTime,
     getMediaForId: getMediaForId,
     getMediaIdForMeta: getMediaIdForMeta,
-    insertFileMetaToDbIfNotExists: insertFileMetaToDbIfNotExists
+    insertFileMetaToDbIfNotExists: insertFileMetaToDbIfNotExists,
+    getAllUsers: getAllUsers,
+    getUserForName: getUserForName,
+    insertUser: insertUser
 }
