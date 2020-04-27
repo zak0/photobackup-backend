@@ -130,6 +130,7 @@ app.post("/media", (req, res) => {
         "id": -1,
         "fileName": fileName,
         "fileSize": fileSize,
+        "dirPath": `./${config.uploadsDir}`,
         "hash": hash,
         "status": constants.MediaState.STATE_UPLOAD_PENDING
     }
@@ -170,7 +171,7 @@ app.post("/media/:id/file", (req, res) => {
             if (media.status == constants.MediaState.STATE_UPLOAD_PENDING) {
                 // Get file from the form-data (using express-fileupload)
                 let newFile = req.files.newFile
-                let filePath = config.mediaDir + "/" + media.fileName
+                let filePath = `${config.mediaDir}/${media.dirPath}/${media.fileName}`
                 newFile.mv(filePath, err => {
                     // Error handler for mv()
                     if (err) {
@@ -192,7 +193,7 @@ app.post("/media/:id/file", (req, res) => {
                                 let fileMeta = {
                                     id: media.id,
                                     filename: media.fileName,
-                                    dirpath: "."
+                                    dirpath: media.dirPath
                                 }
                                 processor.processFile(fileMeta)
                             }
@@ -224,6 +225,7 @@ function rowToFileMeta(row) {
         "id": row.id,
         "fileName": row.filename,
         "fileSize": row.filesize,
+        "dirPath": row.dirpath,
         "hash": row.hash,
         "dateTimeOriginal": row.datetimeoriginal,
         "status": row.status
