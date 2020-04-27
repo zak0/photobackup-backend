@@ -28,12 +28,12 @@ function processAllUnprocessed(callback) {
         }
         else {
             if (rows.length > 0) {
-                console.log("CORE / Processing - Starting to process " + rows.length + " files.")
+                console.log(`CORE / Processing - Starting to process ${rows.length} unprocessed files.`)
                 generateThumbnails(rows)
                 extractExif(rows)
             }
             else {
-                console.log("CORE / Processing - No files pending processing.")
+                console.log("CORE / Processing - Done. No files pending processing.")
             }
         }
     })

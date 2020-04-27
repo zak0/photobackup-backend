@@ -24,30 +24,44 @@ function scanLibrary(callback) {
     console.log("INIT / Files - Starting scan...")
     let scanStartTime = Date.now()
 
-    scanDirAndHandleFiles(config.mediaDir)
+    let scanProgressHandler = {
+        detectedFiles: 0,
+        handledFiles: 0,
+        onFileDetected: function () {
+            this.detectedFiles++
+        },
+        onFileHandled: function () {
+            this.handledFiles++
+            if (this.handledFiles >= this.detectedFiles) {
+                // This means that the scan is done
+                let duration = Date.now() - scanStartTime
+                console.log(`INIT / Files - Scan completed in ${duration} ms.`)
+                callback()
+            }
+        }
+    }
 
-    let duration = Date.now() - scanStartTime
-    console.log(`INIT / Files - Scan completed in ${duration} ms.`)
-    callback()
+    scanDirAndHandleFiles(config.mediaDir, scanProgressHandler)
 }
 
-function scanDirAndHandleFiles(dirPath) {
+function scanDirAndHandleFiles(dirPath, progressHandler) {
     let files = fs.readdirSync(dirPath, { withFileTypes: true})
 
     files.forEach(file => {
         let newPath = `${dirPath}/${file.name}`
 
         if (file.isDirectory()) {
-            scanDirAndHandleFiles(newPath)
+            scanDirAndHandleFiles(newPath, progressHandler)
         }
         
         if (file.isFile() && isImage(file.name)) {
-            handleImage(file.name, dirPath)
+            progressHandler.onFileDetected()
+            handleImage(file.name, dirPath, progressHandler)
         }
     })
 }
 
-function handleImage(fileName, dirPath) {
+function handleImage(fileName, dirPath, progressHandler) {
     let filePath = `${dirPath}/${fileName}`
     let hash = md5.sync(filePath)
 
@@ -66,9 +80,8 @@ function handleImage(fileName, dirPath) {
         }
 
         db.insertFileMetaToDbIfNotExists(file, didNotExist => {
-            if (didNotExist) {
-                console.log(`INIT / Files - Scan found a new file.`)
-            }
+            // TODO Do something with `didNotExist`?
+            progressHandler.onFileHandled()
         })
     })
 }
