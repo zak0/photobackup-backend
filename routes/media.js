@@ -59,9 +59,6 @@ app.get("/media/:id", (req, res) => {
 
 app.get("/media/:id/file", (req, res) => {
     let id = req.params.id
-    let options = {
-        root: config.mediaDir
-    }
 
     db.getMediaForId(id, (err, row) => {
         if (err) {
@@ -69,6 +66,10 @@ app.get("/media/:id/file", (req, res) => {
             res.sendStatus(500)
         }
         else if (row) {
+            let options = {
+                root: `${config.mediaDir}/${row.dirpath}`
+            }
+
             res.sendFile(row.filename, options)
         }
         else {
@@ -190,7 +191,8 @@ app.post("/media/:id/file", (req, res) => {
                                 // Also now trigger thumbnail gneration and exif population
                                 let fileMeta = {
                                     id: media.id,
-                                    filename: media.fileName
+                                    filename: media.fileName,
+                                    dirpath: "."
                                 }
                                 processor.processFile(fileMeta)
                             }

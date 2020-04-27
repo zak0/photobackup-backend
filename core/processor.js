@@ -27,11 +27,14 @@ function processAllUnprocessed(callback) {
             console.log(err)
         }
         else {
-        
-            console.log("CORE / Processing - Starting to process " + rows.length + " files.")
-
-            generateThumbnails(rows)
-            extractExif(rows)
+            if (rows.length > 0) {
+                console.log("CORE / Processing - Starting to process " + rows.length + " files.")
+                generateThumbnails(rows)
+                extractExif(rows)
+            }
+            else {
+                console.log("CORE / Processing - No files pending processing.")
+            }
         }
     })
 }
@@ -67,22 +70,22 @@ function extractExif(rows) {
 }
 
 /**
- * @param {Object} fileMeta Object with at least `id` and `filename` fielda
+ * @param {Object} fileMeta Object with at least `id`, `filename` and `dirpath` fields
  */
 function processFile(fileMeta) {
     generateThumbnail(fileMeta)
 
     extractCreationTimeFromExif(fileMeta, _ => {
-        console.log(`exif read for ${fileMeta}`)
+        console.log(`exif read for ${fileMeta.filename}`)
     })
 }
 
 /**
- * @param {Object} fileMeta Object with at least `id` and `filename` fields
+ * @param {Object} fileMeta Object with at least `id`, `filename` and `dirpath` fields
  * @param {Function} callback Function without params
  */
 function generateThumbnail(fileMeta, callback) {
-    let filePath = config.mediaDir + "/" + fileMeta.filename
+    let filePath = `${config.mediaDir}/${fileMeta.dirpath}/${fileMeta.filename}`
 
     thumb({
         source: filePath,
@@ -98,18 +101,10 @@ function generateThumbnail(fileMeta, callback) {
         }
 
         // Callback doesn't seem to be thread safe in case of successes.
-        // So following part is pointless for now and just cannot work when thumb() call is ongoing
-        // for multiple files simultaneously.
-
-        // else {
-        //     let thumbnailFileName = `${fileMeta.id}_thumb.jpg`
-        //     console.log(`update thumbnail id: ${fileMeta.id}, thumbnailFileName: ${thumbnailFileName}`)
-        //     db.updateThumbnail(fileMeta.id, thumbnailFileName, err => {
-        //         if (err) {
-        //             console.log(err)
-        //         }
-        //     })
-        // }
+        // This manifests in `files` array being empty, so there's no way to
+        // actually access the created thumbnails in here.
+        // 
+        // It is possible, however, to know if the generation fails.
 
         if (callback) {
             callback()
@@ -131,11 +126,11 @@ function extractCreationTimeFromExif(fileMeta, callback) {
         callback()
     }
 
-    let filePath = config.mediaDir + "/" + fileMeta.filename
+    let filePath = `${config.mediaDir}/${fileMeta.dirpath}/${fileMeta.filename}`
 
     new ExifImage({ image: filePath }, (err, exif) => {
         let fallbackToFileTime = function() {
-            files.getCreateTime(filePath, fileTime => {
+            files.getModifiedTime(filePath, fileTime => {
                 let exifTime = util.millisToExifTimeStamp(fileTime)
                 onRowHandled(fileMeta.id, exifTime)
             })

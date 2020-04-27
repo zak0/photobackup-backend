@@ -21,44 +21,54 @@ const config = require("../config")
  * @param {Function} callback Callback that gets called when scan completes. Has signature function() {}.
  */
 function scanLibrary(callback) {
-    let files = fs.readdirSync(config.mediaDir)
-    let filesCount = files.length
-    var newFileCount = 0
-    var handledFilesCount = 0
-
-    console.log("INIT / Files - " + filesCount + " files detected. Starting scan...")
+    console.log("INIT / Files - Starting scan...")
     let scanStartTime = Date.now()
 
-    files.forEach(fileName => {
-        if (!isImage(fileName)) {
-            handledFilesCount++
-            console.log(fileName + " is not an image")
-            return // this it the "continue" of forEach()
+    scanDirAndHandleFiles(config.mediaDir)
+
+    let duration = Date.now() - scanStartTime
+    console.log(`INIT / Files - Scan completed in ${duration} ms.`)
+    callback()
+}
+
+function scanDirAndHandleFiles(dirPath) {
+    let files = fs.readdirSync(dirPath, { withFileTypes: true})
+
+    files.forEach(file => {
+        let newPath = `${dirPath}/${file.name}`
+
+        if (file.isDirectory()) {
+            scanDirAndHandleFiles(newPath)
+        }
+        
+        if (file.isFile() && isImage(file.name)) {
+            handleImage(file.name, dirPath)
+        }
+    })
+}
+
+function handleImage(fileName, dirPath) {
+    let filePath = `${dirPath}/${fileName}`
+    let hash = md5.sync(filePath)
+
+    // Directory path stored into the DB must be relative to the root media dir
+    // ...so let's trim it a bit.
+    let trimmedPath = `.${dirPath.slice(config.mediaDir.length)}`
+
+    fs.stat(filePath, (err, stat) => {
+        let file = {
+            "id": -1,
+            "fileName": fileName,
+            "dirPath": trimmedPath,
+            "fileSize": stat.size,
+            "hash": hash,
+            "status": constants.MediaState.STATE_PROCESSING
         }
 
-        let filePath = config.mediaDir + "/" + fileName
-        let hash = md5.sync(filePath)
-
-        fs.stat(filePath, (err, stat) => {
-            let file = {
-                "id": -1,
-                "fileName": fileName,
-                "fileSize": stat.size,
-                "hash": hash,
-                "status": constants.MediaState.STATE_PROCESSING
+        db.insertFileMetaToDbIfNotExists(file, didNotExist => {
+            if (didNotExist) {
+                console.log(`INIT / Files - Scan found a new file.`)
             }
-            db.insertFileMetaToDbIfNotExists(file, didNotExist => {
-                if (didNotExist) {
-                    newFileCount++
-                }
-
-                if (++handledFilesCount >= filesCount) {
-                    let scanDuration = Date.now() - scanStartTime
-                    console.log("INIT / Files - Scan completed in " + scanDuration + " ms. " + newFileCount + " new files detected.")
-
-                    callback()
-                }
-            })
         })
     })
 }
@@ -72,7 +82,7 @@ function scanLibrary(callback) {
  * 
  * @param {String} filePath Absolute or relative path to the file to resolve.
  */
-function getCreateTime(filePath, callback) {
+function getModifiedTime(filePath, callback) {
     fs.stat(filePath, (err, stat) => {
         if (err) {
             console.log(err)
@@ -95,5 +105,5 @@ function isImage(fileName) {
 
 module.exports = {
     scanLibrary: scanLibrary,
-    getCreateTime: getCreateTime
+    getModifiedTime: getModifiedTime
 }

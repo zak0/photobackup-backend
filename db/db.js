@@ -19,16 +19,16 @@ function getAllMedia(offset, limit, callback) {
 }
 
 function getAllMediaForProcessing(callback) {
-    db.all("SELECT id, filename FROM media WHERE status = ?", constants.MediaState.STATE_PROCESSING, callback)
+    db.all("SELECT id, filename, dirpath FROM media WHERE status = ?", constants.MediaState.STATE_PROCESSING, callback)
 }
 
 function getMediaForId(id, callback) {
-    db.get("SELECT id, filename, filesize, datetimeoriginal, hash, status FROM media WHERE id = ?", id, callback)
+    db.get("SELECT id, filename, dirpath, filesize, datetimeoriginal, hash, status FROM media WHERE id = ?", id, callback)
 }
 
 function getMediaIdForMeta(fileMeta, callback) {
-    db.get(`SELECT id FROM media WHERE filename = ? AND filesize = ? AND hash = ?`,
-    [fileMeta.fileName, fileMeta.fileSize, fileMeta.hash], callback)
+    db.get(`SELECT id FROM media WHERE filename = ? AND dirpath = ? AND filesize = ? AND hash = ?`,
+    [fileMeta.fileName, fileMeta.dirPath, fileMeta.fileSize, fileMeta.hash], callback)
 }
 
 function updateMediaStatus(fileMeta, callback) {
@@ -40,9 +40,9 @@ function updateMediaTime(id, dateTimeOriginal, callback) {
 }
 
 function insertFileMetaToDb(fileMeta, callback) {
-    db.run(`INSERT INTO media (filename, filesize, hash, status)
-        VALUES (?, ?, ?, ?)`,
-        fileMeta.fileName, fileMeta.fileSize, fileMeta.hash, fileMeta.status, callback)
+    db.run(`INSERT INTO media (filename, dirpath, filesize, hash, status)
+        VALUES (?, ?, ?, ?, ?)`,
+        fileMeta.fileName, fileMeta.dirPath, fileMeta.fileSize, fileMeta.hash, fileMeta.status, callback)
 }
 
 /**
@@ -96,6 +96,7 @@ function prepareDatabase(callback) {
         "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "userid"    INTEGER DEFAULT 0,
         "filename"	TEXT,
+        "dirpath"   TEXT,
         "filesize"	INTEGER,
         "hash"	TEXT,
         "status"	TEXT DEFAULT "unknown",
