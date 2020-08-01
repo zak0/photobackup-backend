@@ -1,4 +1,4 @@
-package jaaska.jaakko
+package jaaska.jaakko.photosapp.server
 
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -6,6 +6,7 @@ import io.ktor.application.install
 import io.ktor.auth.*
 import io.ktor.features.ContentNegotiation
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.get
@@ -15,7 +16,7 @@ import io.ktor.routing.routing
 import io.ktor.serialization.json
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import jaaska.jaakko.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.MediaMeta
 
 fun main(args: Array<String>) {
     val server = embeddedServer(
@@ -29,6 +30,11 @@ fun main(args: Array<String>) {
 
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
+
+    Logger.debugLogging = true
+
+    val moduleProvider = ModuleProvider()
+
     install(Authentication) {
         basic("defaultAdminAuth") {
             realm = "Ktor Server"
@@ -51,12 +57,23 @@ fun Application.module() {
             call.respondText("photosapp-backend", contentType = ContentType.Text.Plain)
         }
 
+        //
+        //
+        // ADMIN ENDPOINTS
         authenticate("defaultAdminAuth") {
             post("/user") {
                 // TODO Create new user
             }
+
+            get("/rescan") {
+                moduleProvider.mediaRepository.rescanLibrary()
+                call.respond(HttpStatusCode.OK)
+            }
         }
 
+        //
+        //
+        // USER ENDPOINTS
         authenticate("usersAuth") {
             get("/protected/route/basic") {
                 val principal = call.principal<UserIdPrincipal>()!!
@@ -97,3 +114,4 @@ fun Application.module() {
         }
     }
 }
+

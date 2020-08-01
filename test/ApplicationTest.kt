@@ -1,13 +1,9 @@
 package jaaska.jaakko
 
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
-import io.ktor.routing.*
 import io.ktor.http.*
-import io.ktor.auth.*
 import kotlin.test.*
 import io.ktor.server.testing.*
+import jaaska.jaakko.photosapp.server.module
 
 class ApplicationTest {
     @Test
