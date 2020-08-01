@@ -8,6 +8,7 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
+import io.ktor.response.respondFile
 import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.post
@@ -16,14 +17,14 @@ import io.ktor.routing.routing
 import io.ktor.serialization.json
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import jaaska.jaakko.photosapp.server.model.MediaMeta
+import java.io.File
 
 fun main(args: Array<String>) {
     val server = embeddedServer(
-            Netty,
-            port = 3000,
-            module = Application::module,
-            watchPaths = listOf("photobackup-backend")
+        Netty,
+        port = 3000,
+        module = Application::module,
+        watchPaths = listOf("photobackup-backend")
     )
     server.start(wait = true)
 }
@@ -34,6 +35,7 @@ fun Application.module() {
     Logger.debugLogging = true
 
     val moduleProvider = ModuleProvider()
+    val mediaRepository = moduleProvider.mediaRepository
 
     install(Authentication) {
         basic("defaultAdminAuth") {
@@ -66,7 +68,7 @@ fun Application.module() {
             }
 
             get("/rescan") {
-                moduleProvider.mediaRepository.rescanLibrary()
+                mediaRepository.rescanLibrary()
                 call.respond(HttpStatusCode.OK)
             }
         }
@@ -82,7 +84,8 @@ fun Application.module() {
 
             route("/media") {
                 get("/") {
-                    call.respondText("{\"files\": []}", contentType = ContentType.Application.Json)
+                    val mediaMetas = mediaRepository.getAllMediaMeta()
+                    call.respond(mediaMetas)
                 }
 
                 post("/") {
@@ -92,23 +95,36 @@ fun Application.module() {
 
             route("/media/{id}") {
                 get("/") {
-                    val mediaId = call.parameters["id"]
-
-                    val someMeta = MediaMeta(4, "namegoeswhere", 72, "dirpathhhhh", "hashhhh", "asdfadatetimeoriginal", "statusss")
-                    call.respond(someMeta)
-                    //call.respondText("GET to /media/$mediaId")
+                    val mediaId = call.parameters["id"]?.toInt()?.also { mediaId ->
+                        mediaRepository.getMediaForId(mediaId)?.also {
+                            call.respond(it)
+                        } ?: run {
+                            call.respond(HttpStatusCode.NotFound, "")
+                        }
+                    } ?: run {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
                 }
                 get("/thumbnail") {
                     val mediaId = call.parameters["id"]
-                    call.respondText("GET to /media/$mediaId/thumbnail")
+                    call.respond(HttpStatusCode.NotImplemented)
                 }
                 get("/file") {
-                    val mediaId = call.parameters["id"]
-                    call.respondText("GET to /media/$mediaId/file")
+                    call.parameters["id"]?.toInt()?.let { mediaId ->
+                        mediaRepository.getMediaForId(mediaId)?.let { mediaMeta ->
+                            val mediaFile = File("${mediaMeta.dirPath}\\${mediaMeta.fileName}")
+                            call.respondFile(mediaFile)
+                        } ?: run {
+                            call.respond(HttpStatusCode.NotFound)
+                        }
+                    } ?: run {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
+
                 }
                 get("/exif") {
                     val mediaId = call.parameters["id"]
-                    call.respondText("GET to /media/$mediaId/exif")
+                    call.respond(HttpStatusCode.NotImplemented)
                 }
             }
         }

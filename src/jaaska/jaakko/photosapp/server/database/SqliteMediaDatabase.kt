@@ -30,7 +30,7 @@ class SqliteMediaDatabase(metaRoot: String) : MediaDatabase, SqliteDatabase("$me
             val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "media").build()
             val result = execQuery(it, sql)
 
-            while (result.isAfterLast) {
+            while (result.next()) {
                 ret.add(
                     MediaMeta(
                         result.getInt("id"),
@@ -42,11 +42,35 @@ class SqliteMediaDatabase(metaRoot: String) : MediaDatabase, SqliteDatabase("$me
                         result.getString("status")
                     )
                 )
-                result.next()
             }
         }
 
         return ret
+    }
+
+    override fun getMediaMeta(id: Int): MediaMeta? {
+        var mediaMeta: MediaMeta? = null
+
+        dbIo {
+            val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "media")
+                .addIntegerCondition("id", id)
+                .build()
+            val result = execQuery(it, sql)
+
+            if (result.next()) {
+                mediaMeta = MediaMeta(
+                    result.getInt("id"),
+                    result.getString("filename"),
+                    result.getLong("filesize"),
+                    result.getString("dirpath"),
+                    result.getString("checksum"),
+                    result.getString("datetimeoriginal"),
+                    result.getString("status")
+                )
+            }
+        }
+
+        return mediaMeta
     }
 
     override fun persistMediaMeta(mediaMeta: MediaMeta) {
