@@ -36,6 +36,7 @@ fun Application.module() {
 
     val moduleProvider = ModuleProvider()
     val mediaRepository = moduleProvider.mediaRepository
+    val thumbnailRepository = moduleProvider.thumbnailRepository
 
     install(Authentication) {
         basic("defaultAdminAuth") {
@@ -106,8 +107,17 @@ fun Application.module() {
                     }
                 }
                 get("/thumbnail") {
-                    val mediaId = call.parameters["id"]
-                    call.respond(HttpStatusCode.NotImplemented)
+                    call.parameters["id"]?.toInt()?.let { mediaId ->
+                        mediaRepository.getMediaForId(mediaId)?.let { mediaMeta ->
+                            thumbnailRepository.generateThumbnail(mediaMeta)
+                            val thumbnailFile = File("${moduleProvider.metaRoot}\\thumbs\\${mediaMeta.id}.png")
+                            call.respondFile(thumbnailFile)
+                        } ?: run {
+                            call.respond(HttpStatusCode.NotFound, "")
+                        }
+                    }?: run {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
                 }
                 get("/file") {
                     call.parameters["id"]?.toInt()?.let { mediaId ->

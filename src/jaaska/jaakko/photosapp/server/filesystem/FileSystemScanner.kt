@@ -18,7 +18,6 @@ class FileSystemScanner(private val mediaRoots: List<String>, private val metaRo
     val mediaMetas = HashMap<String, MediaMeta>()
 
     fun scanForMedia() {
-
         mediaRoots.forEach { scanForMedia(it) }
     }
 
@@ -48,8 +47,8 @@ class FileSystemScanner(private val mediaRoots: List<String>, private val metaRo
             imageFile.length(),
             imageFile.parent,
             imageFile.md5String,
-            "N/A",
-            "N/A"
+            "N/A", // TODO Add an actual date here
+            "processing" // TODO Change to "processing"
         )
         db.persistMediaMeta(meta)
     }

@@ -41,5 +41,9 @@ dependencies {
 
     implementation "org.xerial:sqlite-jdbc:3.32.3.2"
 
+    implementation "net.coobird:thumbnailator:0.4.3"
+
+
+
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
 }
