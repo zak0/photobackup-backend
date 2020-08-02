@@ -15,32 +15,30 @@ import java.io.File
  */
 class FileSystemScanner(private val mediaRoots: List<String>, private val metaRoot: String, private val db: MediaDatabase) {
 
-    val mediaMetas = HashMap<String, MediaMeta>()
-
-    fun scanForMedia() {
-        mediaRoots.forEach { scanForMedia(it) }
+    fun scanForMedia(onMediaFile: (MediaMeta) -> Unit) {
+        mediaRoots.forEach { scanForMedia(it, onMediaFile) }
     }
 
-    private fun scanForMedia(rootDirPath: String) {
+    private fun scanForMedia(rootDirPath: String, onMediaFile: (MediaMeta) -> Unit) {
         val root = File(rootDirPath)
 
         if (root.exists() && root.isDirectory) {
             root.listFiles()?.forEach { file ->
                 // Recurse into subdirectories
                 if (file.isDirectory) {
-                    scanForMedia(file.absolutePath)
+                    scanForMedia(file.absolutePath, onMediaFile)
                 }
 
                 // Handle supported media files
                 if (file.isSupportedImageFile) {
                     Logger.d("${file.absolutePath} - ${file.md5String} - ${file.length()}")
-                    handleImageFile(file)
+                    handleImageFile(file, onMediaFile)
                 }
             }
         }
     }
 
-    private fun handleImageFile(imageFile: File) {
+    private fun handleImageFile(imageFile: File, onMediaFile: (MediaMeta) -> Unit) {
         val meta = MediaMeta(
             -1,
             imageFile.name,
@@ -48,10 +46,10 @@ class FileSystemScanner(private val mediaRoots: List<String>, private val metaRo
             imageFile.parent,
             imageFile.md5String,
             "N/A", // TODO Add an actual date here
-            "processing" // TODO Change to "processing"
+            "unknown"
         )
 
-        db.persistMediaMeta(meta)
+        onMediaFile(meta)
     }
 
 }

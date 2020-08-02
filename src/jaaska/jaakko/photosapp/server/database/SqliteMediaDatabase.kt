@@ -84,6 +84,7 @@ class SqliteMediaDatabase(metaRoot: String) : MediaDatabase, SqliteDatabase("$me
                     .addTextValue("checksum", mediaMeta.checksum)
                     .addTextValue("status", mediaMeta.status)
                     .addTextValue("datetimeoriginal", mediaMeta.dateTimeOriginal)
+                    .addIntegerCondition("id", mediaMeta.id)
                     .build()
 
                 execSql(it, sql)
@@ -106,7 +107,11 @@ class SqliteMediaDatabase(metaRoot: String) : MediaDatabase, SqliteDatabase("$me
     }
 
     override fun deleteMediaMeta(mediaMeta: MediaMeta) {
-        TODO("Not yet implemented")
+        dbIo { connection ->
+            QueryBuilder(QueryBuilder.QueryType.DELETE, "media")
+                .addIntegerCondition("id", mediaMeta.id)
+                .build().also { execSql(connection, it) }
+        }
     }
 
     /**

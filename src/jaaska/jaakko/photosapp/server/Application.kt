@@ -17,6 +17,7 @@ import io.ktor.routing.routing
 import io.ktor.serialization.json
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -36,7 +37,6 @@ fun Application.module() {
 
     val moduleProvider = ModuleProvider()
     val mediaRepository = moduleProvider.mediaRepository
-    val thumbnailRepository = moduleProvider.thumbnailRepository
 
     install(Authentication) {
         basic("defaultAdminAuth") {
@@ -109,8 +109,8 @@ fun Application.module() {
                 get("/thumbnail") {
                     call.parameters["id"]?.toInt()?.let { mediaId ->
                         mediaRepository.getMediaForId(mediaId)?.let { mediaMeta ->
-                            thumbnailRepository.generateThumbnail(mediaMeta)
-                            val thumbnailFile = File("${moduleProvider.metaRoot}\\thumbs\\${mediaMeta.id}.png")
+                            val thumbPath = mediaRepository.getThumbnailPath(mediaMeta)
+                            val thumbnailFile = File(thumbPath)
                             call.respondFile(thumbnailFile)
                         } ?: run {
                             call.respond(HttpStatusCode.NotFound, "")
@@ -122,7 +122,7 @@ fun Application.module() {
                 get("/file") {
                     call.parameters["id"]?.toInt()?.let { mediaId ->
                         mediaRepository.getMediaForId(mediaId)?.let { mediaMeta ->
-                            val mediaFile = File("${mediaMeta.dirPath}\\${mediaMeta.fileName}")
+                            val mediaFile = File(mediaMeta.absoluteFilePath)
                             call.respondFile(mediaFile)
                         } ?: run {
                             call.respond(HttpStatusCode.NotFound)
