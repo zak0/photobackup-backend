@@ -11,7 +11,7 @@ class ExifProcessor {
     fun getDateTimeOriginal(mediaMeta: MediaMeta): String? {
         val mediaFile = File(mediaMeta.absoluteFilePath)
         val exif = ImageMetadataReader.readMetadata(mediaFile).getFirstDirectoryOfType(ExifSubIFDDirectory::class.java)
-        return exif.getString(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
+        return exif?.getString(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
     }
 
 }
