@@ -41,9 +41,8 @@ dependencies {
 
     implementation "org.xerial:sqlite-jdbc:3.32.3.2"
 
-    implementation "net.coobird:thumbnailator:0.4.3"
-
-
+    implementation "net.coobird:thumbnailator:0.4.3" // For thumbnails
+    implementation "com.drewnoakes:metadata-extractor:2.14.0" // For EXIF
 
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
 }

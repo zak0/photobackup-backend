@@ -50,6 +50,7 @@ class FileSystemScanner(private val mediaRoots: List<String>, private val metaRo
             "N/A", // TODO Add an actual date here
             "processing" // TODO Change to "processing"
         )
+
         db.persistMediaMeta(meta)
     }
 

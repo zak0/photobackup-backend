@@ -9,6 +9,6 @@ data class MediaMeta(
     val fileSize: Long,
     val dirPath: String,
     val checksum: String,
-    val dateTimeOriginal: String,
-    val status: String
+    var dateTimeOriginal: String,
+    var status: String
 )
