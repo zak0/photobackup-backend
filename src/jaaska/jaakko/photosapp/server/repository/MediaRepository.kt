@@ -3,10 +3,12 @@ package jaaska.jaakko.photosapp.server.repository
 import jaaska.jaakko.photosapp.server.Logger
 import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
+import jaaska.jaakko.photosapp.server.extension.md5String
 import jaaska.jaakko.photosapp.server.filesystem.FileSystemScanner
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
 import jaaska.jaakko.photosapp.server.processor.MediaProcessor
+import java.io.File
 
 class MediaRepository(
     private val db: MediaDatabase,
@@ -49,6 +51,25 @@ class MediaRepository(
         mediaMeta.status = MediaStatus.UPLOAD_PENDING
         mediaMeta.dirPath = uploadsDir
         db.persistMediaMeta(mediaMeta)
+        cacheMedia(mediaMeta)
+    }
+
+    /**
+     * Handler for when a client uploads a media file.
+     *
+     * Changes the status of the meta data to "processing" and persist it.
+     * Then passes it on to [MediaProcessor] for processing.
+     */
+    fun onMediaFileReceived(mediaMeta: MediaMeta) {
+        mediaMeta.status = MediaStatus.PROCESSING
+        mediaProcessor.processMedia(mediaMeta)
+    }
+
+    /**
+     * Checks if [mediaFile] matches the metadata defined in [mediaMeta].
+     */
+    fun mediaMatchesMeta(mediaMeta: MediaMeta, mediaFile: File): Boolean {
+        return mediaFile.length() == mediaMeta.fileSize && mediaFile.md5String == mediaMeta.checksum
     }
 
     fun rescanLibrary() {

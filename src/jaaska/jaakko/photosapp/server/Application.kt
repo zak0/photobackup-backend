@@ -25,6 +25,7 @@ import io.ktor.server.netty.Netty
 import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import jaaska.jaakko.photosapp.server.extension.copyToSuspend
 import jaaska.jaakko.photosapp.server.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.MediaStatus
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -107,7 +108,7 @@ fun Application.module() {
 
             route("/media/{id}") {
                 get("/") {
-                    val mediaId = call.parameters["id"]?.toInt()?.also { mediaId ->
+                    call.parameters["id"]?.toInt()?.also { mediaId ->
                         mediaRepository.getMediaForId(mediaId)?.also {
                             call.respond(it)
                         } ?: run {
@@ -147,29 +148,35 @@ fun Application.module() {
                     call.parameters["id"]?.toInt()?.let { mediaId ->
                         mediaRepository.getMediaForId(mediaId)?.let { mediaMeta ->
                             // Metadata for the media must exist, and it must be in "upload_pending" state
-                            if (mediaMeta.status != "upload_pending") {
-                                call.respond(HttpStatusCode.Conflict)
+                            if (mediaMeta.status != MediaStatus.UPLOAD_PENDING) {
+                                call.respond(HttpStatusCode.Conflict, "File already exists")
                             } else {
                                 // Read the file, that should be there as multipart form data
+                                val file = File(mediaMeta.dirPath, mediaMeta.fileName)
                                 call.receiveMultipart().forEachPart { part ->
                                     if (part is PartData.FileItem) {
                                         part.originalFileName?.also { filename ->
-                                            val file = File(mediaMeta.dirPath, filename)
                                             part.streamProvider().use { input -> file.outputStream().buffered().use { output -> input.copyToSuspend(output) } }
                                         }
                                     }
                                     part.dispose()
                                 }
 
-                                // TODO Verify that the file matches the meta data. This will ensure that the file was
-                                //  received intact, and that the file was correct.
-                                call.respond(HttpStatusCode.Created)
+                                // Verify that the file matches the meta data. This will ensure that the file was
+                                // received intact, and that the file was correct.
+                                if (mediaRepository.mediaMatchesMeta(mediaMeta, file)) {
+                                    call.respond(HttpStatusCode.Created)
+                                    mediaRepository.onMediaFileReceived(mediaMeta)
+                                } else {
+                                    call.respond(HttpStatusCode.BadRequest, "File doesn't match metadata")
+                                    file.delete()
+                                }
                             }
                         } ?: run {
                             call.respond(HttpStatusCode.NotFound)
                         }
                     } ?: run {
-                        call.respond(HttpStatusCode.BadRequest)
+                        call.respond(HttpStatusCode.BadRequest, "Missing media ID")
                     }
                 }
                 get("/exif") {

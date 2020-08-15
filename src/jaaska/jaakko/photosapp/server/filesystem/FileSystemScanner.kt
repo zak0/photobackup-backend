@@ -45,8 +45,8 @@ class FileSystemScanner(private val mediaRoots: List<String>, private val metaRo
             imageFile.length(),
             imageFile.parent,
             imageFile.md5String,
-            "N/A", // TODO Add an actual date here
-            "unknown"
+            "N/A", // Date will be added during processing
+            "unknown" // Status will be cleared out later on
         )
 
         onMediaFile(meta)
