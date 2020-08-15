@@ -5,12 +5,14 @@ import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.filesystem.FileSystemScanner
 import jaaska.jaakko.photosapp.server.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.MediaStatus
 import jaaska.jaakko.photosapp.server.processor.MediaProcessor
 
 class MediaRepository(
     private val db: MediaDatabase,
     private val fsScanner: FileSystemScanner,
     private val metaRoot: String,
+    private val uploadsDir: String,
     private val mediaProcessor: MediaProcessor
 ) {
 
@@ -36,6 +38,18 @@ class MediaRepository(
 
     fun getThumbnailPath(mediaMeta: MediaMeta): String =
         "${metaRoot}${OS_PATH_SEPARATOR}thumbs${OS_PATH_SEPARATOR}${mediaMeta.id}.png"
+
+    /**
+     * Handler for when a client POSTs a new media metadata.
+     *
+     * Populates remaining fields with proper values, then persists it into the database.
+     */
+    fun onMediaMetaReceived(mediaMeta: MediaMeta) {
+        mediaMeta.id = -1
+        mediaMeta.status = MediaStatus.UPLOAD_PENDING
+        mediaMeta.dirPath = uploadsDir
+        db.persistMediaMeta(mediaMeta)
+    }
 
     fun rescanLibrary() {
         initCachesIfNeeded()

@@ -14,6 +14,7 @@ import jaaska.jaakko.photosapp.server.repository.MediaRepository
 class ModuleProvider() {
 
     private val mediaRoots = listOf("C:\\Users\\jaakko\\Temp\\photobackup-media")
+    val uploadsDir = "C:\\Users\\jaakko\\Temp\\photobackup-media\\uploads"
     val metaRoot = "C:\\Users\\jaakko\\Temp\\photobackup-meta"
 
     private val mediaDatabase: MediaDatabase by lazy { SqliteMediaDatabase(metaRoot) }
@@ -22,6 +23,6 @@ class ModuleProvider() {
     private val exifProcessor: ExifProcessor by lazy { ExifProcessor() }
     private val mediaProcessor: MediaProcessor by lazy { MediaProcessor(thumbnailGenerator, exifProcessor) }
 
-    val mediaRepository: MediaRepository by lazy { MediaRepository(mediaDatabase, fileSystemScanner, metaRoot, mediaProcessor) }
+    val mediaRepository: MediaRepository by lazy { MediaRepository(mediaDatabase, fileSystemScanner, metaRoot, uploadsDir, mediaProcessor) }
 
 }
