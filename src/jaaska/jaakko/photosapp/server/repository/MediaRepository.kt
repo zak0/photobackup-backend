@@ -63,6 +63,7 @@ class MediaRepository(
     fun onMediaFileReceived(mediaMeta: MediaMeta) {
         mediaMeta.status = MediaStatus.PROCESSING
         mediaProcessor.processMedia(mediaMeta)
+        db.persistMediaMeta(mediaMeta)
     }
 
     /**
@@ -98,9 +99,8 @@ class MediaRepository(
 
                 // Process it
                 mediaProcessor.processMedia(meta)
-                meta.status = "ready"
 
-                // Update state after processing
+                // Persist the metadata after processing
                 db.persistMediaMeta(meta)
             } else {
                 // This file existed.

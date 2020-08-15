@@ -1,6 +1,7 @@
 package jaaska.jaakko.photosapp.server.processor
 
 import jaaska.jaakko.photosapp.server.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.MediaStatus
 
 class MediaProcessor(private val thumbnailGenerator: ThumbnailGenerator, private val exifProcessor: ExifProcessor) {
 
@@ -18,6 +19,9 @@ class MediaProcessor(private val thumbnailGenerator: ThumbnailGenerator, private
         // Extract datetimeoriginal
         val dateTimeOriginal = exifProcessor.getDateTimeOriginal(mediaMeta)
         mediaMeta.dateTimeOriginal = dateTimeOriginal ?: "N/A"
+
+        // Finally mark media as ready
+        mediaMeta.status = MediaStatus.READY
     }
 
 }
