@@ -8,8 +8,10 @@ import jaaska.jaakko.photosapp.server.filesystem.FileSystemScanner
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
 import jaaska.jaakko.photosapp.server.processor.MediaProcessor
+import kotlinx.coroutines.*
 import java.io.File
 
+@ObsoleteCoroutinesApi
 class MediaRepository(
     private val db: MediaDatabase,
     private val fsScanner: FileSystemScanner,
@@ -17,6 +19,8 @@ class MediaRepository(
     private val uploadsDir: String,
     private val mediaProcessor: MediaProcessor
 ) {
+
+    private var libraryScanJob: Job? = null
 
     /**
      * Map of [MediaMeta]s, [MediaMeta.id] to [MediaMeta].
@@ -73,61 +77,74 @@ class MediaRepository(
         return mediaFile.length() == mediaMeta.fileSize && mediaFile.md5String == mediaMeta.checksum
     }
 
-    fun rescanLibrary() {
-        initCachesIfNeeded()
+    /**
+     * Starts a media library scans for media files. Scan is started as a background coroutine.
+     *
+     * @return true when when scan was started, false if not (e.g. when a scan was already running)
+     */
+    fun scanLibrary(): Boolean {
+        if (libraryScanJob?.isActive == true) {
+            return false
+        } else {
+            libraryScanJob = GlobalScope.launch {
+                initCachesIfNeeded()
 
-        // Entries from this map will be removed as existing files are discovered.
-        // After processing, entries left in this map are files that no longer exist.
-        val removedFiles = HashMap<String, MediaMeta>(mediaMetasByHash)
+                // Entries from this map will be removed as existing files are discovered.
+                // After processing, entries left in this map are files that no longer exist.
+                val removedFiles = HashMap<String, MediaMeta>(mediaMetasByHash)
 
-        var existingFiles = 0
-        var filesMoved = 0
-        var newFiles = 0
-        var filesRemoved = 0
+                var existingFiles = 0
+                var filesMoved = 0
+                var newFiles = 0
+                var filesRemoved = 0
 
-        fsScanner.scanForMedia() { meta ->
-            if (!mediaMetasByHash.containsKey(meta.checksum)) {
-                // This is a new file
-                newFiles++
+                fsScanner.scanForMedia() { meta ->
+                    if (!mediaMetasByHash.containsKey(meta.checksum)) {
+                        // This is a new file
+                        newFiles++
 
-                // Add it to DB with status "processing"
-                meta.status = "processing"
-                db.persistMediaMeta(meta)
+                        // Add it to DB with status "processing"
+                        meta.status = "processing"
+                        db.persistMediaMeta(meta)
 
-                // Add it to caches
-                cacheMedia(meta)
+                        // Add it to caches
+                        cacheMedia(meta)
 
-                // Process it
-                mediaProcessor.processMedia(meta)
+                        // Process it
+                        mediaProcessor.processMedia(meta)
 
-                // Persist the metadata after processing
-                db.persistMediaMeta(meta)
-            } else {
-                // This file existed.
-                val existingMeta = mediaMetasByHash[meta.checksum]!!
-                if (meta.dirPath != existingMeta.dirPath || meta.fileName != existingMeta.fileName) {
-                    // If the newly found file is e.g. in different folder now, update the record
-                    filesMoved++
-                    existingMeta.dirPath = meta.dirPath
-                    existingMeta.fileName = meta.fileName
-                    db.persistMediaMeta(existingMeta)
-                } else {
-                    // The file is still the same
-                    existingFiles++
+                        // Persist the metadata after processing
+                        db.persistMediaMeta(meta)
+                    } else {
+                        // This file existed.
+                        val existingMeta = mediaMetasByHash[meta.checksum]!!
+                        if (meta.dirPath != existingMeta.dirPath || meta.fileName != existingMeta.fileName) {
+                            // If the newly found file is e.g. in different folder now, update the record
+                            filesMoved++
+                            existingMeta.dirPath = meta.dirPath
+                            existingMeta.fileName = meta.fileName
+                            db.persistMediaMeta(existingMeta)
+                        } else {
+                            // The file is still the same
+                            existingFiles++
+                        }
+
+                        removedFiles.remove(meta.checksum)
+                    }
                 }
 
-                removedFiles.remove(meta.checksum)
+                // Delete removed files from the database
+                filesRemoved = removedFiles.size
+                removedFiles.values.forEach { removedMeta ->
+                    unCacheMedia(removedMeta)
+                    db.deleteMediaMeta(removedMeta)
+                }
+
+                Logger.i("Library scan complete. New files: $newFiles, moved/renamed files: $filesMoved, removed files: $filesRemoved, existing files: $existingFiles")
             }
-        }
 
-        // Delete removed files from the database
-        filesRemoved = removedFiles.size
-        removedFiles.values.forEach { removedMeta ->
-            unCacheMedia(removedMeta)
-            db.deleteMediaMeta(removedMeta)
+            return true
         }
-
-        Logger.i("Library scan complete. New files: $newFiles, moved/renamed files: $filesMoved, removed files: $filesRemoved, existing files: $existingFiles")
     }
 
     private fun unCacheMedia(mediaMeta: MediaMeta) {

@@ -26,6 +26,7 @@ import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import jaaska.jaakko.photosapp.server.extension.copyToSuspend
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -38,6 +39,7 @@ fun main(args: Array<String>) {
     server.start(wait = true)
 }
 
+@OptIn(ObsoleteCoroutinesApi::class)
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
 
@@ -76,9 +78,14 @@ fun Application.module() {
                 // TODO Create new user
             }
 
-            get("/rescan") {
-                mediaRepository.rescanLibrary()
-                call.respond(HttpStatusCode.OK)
+            get("/scanlibrary") {
+                if (mediaRepository.scanLibrary()) {
+                    // Library scan was started
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    // A scan was already running
+                    call.respond(HttpStatusCode.Conflict, "Scan is already running")
+                }
             }
         }
 
