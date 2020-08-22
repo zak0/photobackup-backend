@@ -32,9 +32,19 @@ class MediaRepository(
      */
     private val mediaMetasByHash = HashMap<String, MediaMeta>()
 
-    fun getAllMediaMeta(): List<MediaMeta> {
+    fun getAllMediaMeta(limit: Int = Int.MAX_VALUE, offset: Int = 0): List<MediaMeta> {
         initCachesIfNeeded()
-        return mediaMetasCache.values.toList()
+
+        val metas = mediaMetasCache.values.toList()
+
+        return if (limit < metas.size) {
+            val safeFromIndex = minOf(offset, metas.size - 1)
+            val safeToIndex = minOf(safeFromIndex + limit, metas.size)
+
+            mediaMetasCache.values.toList().subList(safeFromIndex, safeToIndex)
+        } else {
+            mediaMetasCache.values.toList()
+        }
     }
 
     fun getMediaForId(id: Int): MediaMeta? {

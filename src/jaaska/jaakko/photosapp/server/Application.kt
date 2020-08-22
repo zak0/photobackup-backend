@@ -24,6 +24,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import jaaska.jaakko.photosapp.server.extension.copyToSuspend
+import jaaska.jaakko.photosapp.server.extension.noneAreNull
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -100,7 +101,15 @@ fun Application.module() {
 
             route("/media") {
                 get("/") {
-                    val mediaMetas = mediaRepository.getAllMediaMeta()
+                    val offset = call.request.queryParameters["offset"]?.toIntOrNull()
+                    val limit = call.request.queryParameters["limit"]?.toIntOrNull()
+
+                    val mediaMetas = if (noneAreNull(offset, limit)) {
+                        mediaRepository.getAllMediaMeta(limit!!, offset!!)
+                    } else {
+                        mediaRepository.getAllMediaMeta()
+                    }
+
                     call.respond(mediaMetas)
                 }
 

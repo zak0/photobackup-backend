@@ -7,3 +7,8 @@ val OS_PATH_SEPARATOR: String
     } else {
         "/"
     }
+
+fun noneAreNull(vararg objects: Any?): Boolean {
+    objects.forEach { if (it == null) return false }
+    return true
+}
