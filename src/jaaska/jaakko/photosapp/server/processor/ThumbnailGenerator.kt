@@ -13,7 +13,7 @@ class ThumbnailGenerator(private val metaRoot: String) {
 
         val mediaFile = File(mediaMeta.absoluteFilePath)
         val thumbnailFile = File("${metaRoot}${OS_PATH_SEPARATOR}thumbs${OS_PATH_SEPARATOR}${mediaMeta.id}.png")
-        Thumbnailator.createThumbnail(mediaFile, thumbnailFile, 128, 128)
+        Thumbnailator.createThumbnail(mediaFile, thumbnailFile, 256, 256)
     }
 
 }
