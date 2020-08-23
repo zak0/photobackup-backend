@@ -114,11 +114,10 @@ fun Application.module() {
                 }
 
                 post("/") {
-                    // TODO Check if a matching metadata (checksum and filesize) already exists in the database
-                    //  If not, create new entry for given meta data into database
-                    val mediaMeta = call.receive<MediaMeta>()
-                    mediaRepository.onMediaMetaReceived(mediaMeta)
-                    call.respond(HttpStatusCode.Created, mediaMeta)
+                    val receivedMeta = call.receive<MediaMeta>()
+                    val responseMeta = mediaRepository.onMediaMetaReceived(receivedMeta)
+                    val statusCode = if (responseMeta.first) HttpStatusCode.Created else HttpStatusCode.OK
+                    call.respond(statusCode, responseMeta.second)
                 }
             }
 

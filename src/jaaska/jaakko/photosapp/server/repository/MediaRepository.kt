@@ -58,14 +58,26 @@ class MediaRepository(
     /**
      * Handler for when a client POSTs a new media metadata.
      *
-     * Populates remaining fields with proper values, then persists it into the database.
+     * If media already exists (size and checksum) match an existing meta data, then returns that existing meta data.
+     * If this is a new media item, populates remaining fields with proper values, then persists it into the database.
+     *
+     * @return [Pair] where first value is a boolean telling if new media meta was persisted into the db. When [Boolean]
+     *  is true, the second value [MediaMeta] is the [newMeta] with necessary fields populated. If it's false, then an
+     *  existing [MediaMeta] object is in the second field of the [Pair].
      */
-    fun onMediaMetaReceived(mediaMeta: MediaMeta) {
-        mediaMeta.id = -1
-        mediaMeta.status = MediaStatus.UPLOAD_PENDING
-        mediaMeta.dirPath = uploadsDir
-        db.persistMediaMeta(mediaMeta)
-        cacheMedia(mediaMeta)
+    fun onMediaMetaReceived(newMeta: MediaMeta): Pair<Boolean, MediaMeta> {
+        initCachesIfNeeded()
+
+        return mediaMetasByHash[newMeta.checksum]?.let { existingMeta ->
+            Pair(false, existingMeta)
+        } ?: let {
+            newMeta.id = -1
+            newMeta.status = MediaStatus.UPLOAD_PENDING
+            newMeta.dirPath = uploadsDir
+            db.persistMediaMeta(newMeta)
+            cacheMedia(newMeta)
+            Pair(true, newMeta)
+        }
     }
 
     /**
