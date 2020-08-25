@@ -1,5 +1,7 @@
 package jaaska.jaakko.photosapp.server
 
+import jaaska.jaakko.photosapp.server.configuration.Config
+import jaaska.jaakko.photosapp.server.configuration.ConfigLoader
 import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.database.SqliteMediaDatabase
 import jaaska.jaakko.photosapp.server.filesystem.FileSystemScanner
@@ -23,6 +25,20 @@ class ModuleProvider() {
     private val exifProcessor: ExifProcessor by lazy { ExifProcessor() }
     private val mediaProcessor: MediaProcessor by lazy { MediaProcessor(thumbnailGenerator, exifProcessor) }
 
-    val mediaRepository: MediaRepository by lazy { MediaRepository(mediaDatabase, fileSystemScanner, metaRoot, uploadsDir, mediaProcessor) }
+    val configLoader: ConfigLoader by lazy { ConfigLoader() }
+
+    /** Utility getter for [Config]. [ConfigLoader.loadConfig] must be called before this is available. */
+    val config: Config
+        get() = configLoader.config
+
+    val mediaRepository: MediaRepository by lazy {
+        MediaRepository(
+            mediaDatabase,
+            fileSystemScanner,
+            metaRoot,
+            uploadsDir,
+            mediaProcessor
+        )
+    }
 
 }

@@ -30,23 +30,32 @@ import jaaska.jaakko.photosapp.server.model.MediaStatus
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import java.io.File
 
+val moduleProvider by lazy { ModuleProvider() }
+
 fun main(args: Array<String>) {
+    Logger.debugLogging = true
+
+    if (args.size < 2) {
+        Logger.i("No config file defined. Using default settings.")
+        moduleProvider.configLoader.loadConfig("./default_config.json")
+    } else {
+        moduleProvider.configLoader.loadConfig(args[1])
+    }
+
     val server = embeddedServer(
         Netty,
         port = 3000,
-        module = Application::module,
-        watchPaths = listOf("photobackup-backend")
+        module = Application::module
+        //watchPaths = listOf("photobackup-backend")
     )
     server.start(wait = true)
+
 }
 
 @OptIn(ObsoleteCoroutinesApi::class)
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
 
-    Logger.debugLogging = true
-
-    val moduleProvider = ModuleProvider()
     val mediaRepository = moduleProvider.mediaRepository
 
     install(Authentication) {
