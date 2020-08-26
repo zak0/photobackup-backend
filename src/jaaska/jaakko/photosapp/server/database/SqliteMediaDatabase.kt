@@ -1,9 +1,11 @@
 package jaaska.jaakko.photosapp.server.database
 
+import jaaska.jaakko.photosapp.server.configuration.Config
+import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import java.sql.Connection
 
-class SqliteMediaDatabase(metaRoot: String) : MediaDatabase, SqliteDatabase("$metaRoot\\meta.db", 2) {
+class SqliteMediaDatabase(config: Config) : MediaDatabase, SqliteDatabase("${config.metaRootPath}${OS_PATH_SEPARATOR}meta.db", 2) {
 
     override fun onCreate(connection: Connection) {
         val createMediaSql = QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "media")

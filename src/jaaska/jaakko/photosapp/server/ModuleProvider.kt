@@ -9,19 +9,19 @@ import jaaska.jaakko.photosapp.server.processor.ExifProcessor
 import jaaska.jaakko.photosapp.server.processor.MediaProcessor
 import jaaska.jaakko.photosapp.server.processor.ThumbnailGenerator
 import jaaska.jaakko.photosapp.server.repository.MediaRepository
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.serialization.UnstableDefault
 
 /**
  * Pure DI "composition root".
  */
+@ObsoleteCoroutinesApi
+@UnstableDefault
 class ModuleProvider() {
 
-    private val mediaRoots = listOf("C:\\Users\\jaakko\\Temp\\photobackup-media")
-    val uploadsDir = "C:\\Users\\jaakko\\Temp\\photobackup-media\\uploads"
-    val metaRoot = "C:\\Users\\jaakko\\Temp\\photobackup-meta"
-
-    private val mediaDatabase: MediaDatabase by lazy { SqliteMediaDatabase(metaRoot) }
-    private val fileSystemScanner: FileSystemScanner by lazy { FileSystemScanner(mediaRoots, metaRoot, mediaDatabase) }
-    private val thumbnailGenerator: ThumbnailGenerator by lazy { ThumbnailGenerator(metaRoot) }
+    private val mediaDatabase: MediaDatabase by lazy { SqliteMediaDatabase(config) }
+    private val fileSystemScanner: FileSystemScanner by lazy { FileSystemScanner(config, mediaDatabase) }
+    private val thumbnailGenerator: ThumbnailGenerator by lazy { ThumbnailGenerator(config) }
     private val exifProcessor: ExifProcessor by lazy { ExifProcessor() }
     private val mediaProcessor: MediaProcessor by lazy { MediaProcessor(thumbnailGenerator, exifProcessor) }
 
@@ -35,8 +35,7 @@ class ModuleProvider() {
         MediaRepository(
             mediaDatabase,
             fileSystemScanner,
-            metaRoot,
-            uploadsDir,
+            config,
             mediaProcessor
         )
     }

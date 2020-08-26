@@ -1,6 +1,7 @@
 package jaaska.jaakko.photosapp.server.filesystem
 
 import jaaska.jaakko.photosapp.server.Logger
+import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.extension.isSupportedImageFile
 import jaaska.jaakko.photosapp.server.extension.md5String
@@ -13,7 +14,10 @@ import java.io.File
  *  Object is initialized with [mediaRoots] list of absolute paths to root directories with media to include, and
  *  [metaRoot] absolute path to the directory containing library meta data.
  */
-class FileSystemScanner(private val mediaRoots: List<String>, private val metaRoot: String, private val db: MediaDatabase) {
+class FileSystemScanner(config: Config, private val db: MediaDatabase) {
+
+    private val mediaRoots: List<String> = config.mediaDirs
+    private val metaRoot: String = config.metaRootPath
 
     fun scanForMedia(onMediaFile: (MediaMeta) -> Unit) {
         mediaRoots.forEach { scanForMedia(it, onMediaFile) }

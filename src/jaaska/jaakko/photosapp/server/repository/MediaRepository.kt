@@ -1,6 +1,7 @@
 package jaaska.jaakko.photosapp.server.repository
 
 import jaaska.jaakko.photosapp.server.Logger
+import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.extension.md5String
@@ -15,10 +16,12 @@ import java.io.File
 class MediaRepository(
     private val db: MediaDatabase,
     private val fsScanner: FileSystemScanner,
-    private val metaRoot: String,
-    private val uploadsDir: String,
+    config: Config,
     private val mediaProcessor: MediaProcessor
 ) {
+
+    private val metaRoot = config.metaRootPath
+    private val uploadsDir = config.uploadsDir
 
     private var libraryScanJob: Job? = null
 

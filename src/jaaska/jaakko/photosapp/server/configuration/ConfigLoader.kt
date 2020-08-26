@@ -32,6 +32,10 @@ class ConfigLoader {
         // Validate config
         val isValid = config?.let { configIsValid(it) } ?: false
 
+        if (isValid) {
+            this.config = config!!
+        }
+
         // Return Config when all good, null otherwise
         return if (isValid) config else null
     }

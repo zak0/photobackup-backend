@@ -28,10 +28,15 @@ import jaaska.jaakko.photosapp.server.extension.noneAreNull
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.serialization.UnstableDefault
 import java.io.File
 
+@UnstableDefault
+@ObsoleteCoroutinesApi
 val moduleProvider by lazy { ModuleProvider() }
 
+@UnstableDefault
+@ObsoleteCoroutinesApi
 fun main(args: Array<String>) {
     Logger.debugLogging = true
 
@@ -52,7 +57,8 @@ fun main(args: Array<String>) {
 
 }
 
-@OptIn(ObsoleteCoroutinesApi::class)
+@UnstableDefault
+@ObsoleteCoroutinesApi
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
 

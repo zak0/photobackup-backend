@@ -1,12 +1,15 @@
 package jaaska.jaakko.photosapp.server.processor
 
+import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import net.coobird.thumbnailator.Thumbnailator
 import java.io.File
 
-class ThumbnailGenerator(private val metaRoot: String) {
+class ThumbnailGenerator(config: Config) {
+
+    private val metaRoot: String = config.metaRootPath
 
     fun generateThumbnailForMedia(mediaMeta: MediaMeta) {
         require(mediaMeta.id > 0) { "MediaMeta must have a DB ID before it can be processed!" }
