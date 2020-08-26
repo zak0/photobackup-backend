@@ -40,21 +40,25 @@ val moduleProvider by lazy { ModuleProvider() }
 fun main(args: Array<String>) {
     Logger.debugLogging = true
 
-    if (args.size < 2) {
+    val config = if (args.size < 2) {
         Logger.i("No config file defined. Using default settings.")
         moduleProvider.configLoader.loadConfig("./default_config.json")
     } else {
         moduleProvider.configLoader.loadConfig(args[1])
     }
 
-    val server = embeddedServer(
-        Netty,
-        port = 3000,
-        module = Application::module
-        //watchPaths = listOf("photobackup-backend")
-    )
-    server.start(wait = true)
-
+    config?.also {
+        val server = embeddedServer(
+            Netty,
+            port = 3000,
+            module = Application::module
+            //watchPaths = listOf("photobackup-backend")
+        )
+        server.start(wait = true)
+    } ?: run {
+        Logger.e("No valid configuration!")
+        return
+    }
 }
 
 @UnstableDefault
@@ -157,7 +161,7 @@ fun Application.module() {
                         } ?: run {
                             call.respond(HttpStatusCode.NotFound, "")
                         }
-                    }?: run {
+                    } ?: run {
                         call.respond(HttpStatusCode.BadRequest)
                     }
                 }
@@ -186,7 +190,10 @@ fun Application.module() {
                                 call.receiveMultipart().forEachPart { part ->
                                     if (part is PartData.FileItem) {
                                         part.originalFileName?.also { filename ->
-                                            part.streamProvider().use { input -> file.outputStream().buffered().use { output -> input.copyToSuspend(output) } }
+                                            part.streamProvider().use { input ->
+                                                file.outputStream().buffered()
+                                                    .use { output -> input.copyToSuspend(output) }
+                                            }
                                         }
                                     }
                                     part.dispose()
