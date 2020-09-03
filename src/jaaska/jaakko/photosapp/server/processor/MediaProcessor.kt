@@ -19,8 +19,10 @@ class MediaProcessor(private val thumbnailGenerator: ThumbnailGenerator, private
     fun processMedia(mediaMeta: MediaMeta) {
         require(mediaMeta.id > 0) { "MediaMeta must have a DB ID before it can be processed!" }
 
+        val orientation = exifProcessor.getOrientation(mediaMeta)
+
         // Generate thumbnail
-        thumbnailGenerator.generateThumbnailForMedia(mediaMeta)
+        thumbnailGenerator.generateThumbnailForMedia(mediaMeta, orientation)
 
         // Extract datetimeoriginal either from EXIF, or if not available, try to use file creation time, if that fails
         // try lastModifiedTime.
