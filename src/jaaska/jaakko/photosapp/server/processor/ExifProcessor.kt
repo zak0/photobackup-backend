@@ -12,7 +12,12 @@ class ExifProcessor {
     fun getDateTimeOriginal(mediaMeta: MediaMeta): String? {
         val mediaFile = File(mediaMeta.absoluteFilePath)
         val exif = ImageMetadataReader.readMetadata(mediaFile).getFirstDirectoryOfType(ExifSubIFDDirectory::class.java)
-        return exif?.getString(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
+
+        return if (exif.containsTag(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)) {
+            exif?.getString(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
+        } else {
+            null
+        }
     }
 
     fun getOrientation(mediaMeta: MediaMeta): Int? {
@@ -22,7 +27,12 @@ class ExifProcessor {
 
     fun getOrientation(file: File): Int? {
         val exif = ImageMetadataReader.readMetadata(file).getFirstDirectoryOfType(ExifSubIFDDirectory::class.java)
-        return exif?.parent?.getInt(ExifSubIFDDirectory.TAG_ORIENTATION)
+
+        return if (exif?.parent?.containsTag(ExifSubIFDDirectory.TAG_ORIENTATION) == true) {
+            exif.parent?.getInt(ExifSubIFDDirectory.TAG_ORIENTATION)
+        } else {
+            null
+        }
     }
 
 }
