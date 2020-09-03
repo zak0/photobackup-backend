@@ -36,7 +36,7 @@ class MediaProcessor(private val thumbnailGenerator: ThumbnailGenerator, private
             val creationTime = fileAttributes.creationTime().toMillis()
             val modifiedTime = fileAttributes.lastModifiedTime().toMillis()
 
-            DateUtil.dateToExifDate(Date(if (creationTime != 0L) creationTime else modifiedTime))
+            DateUtil.dateToExifDateTime(Date(if (creationTime != 0L) creationTime else modifiedTime))
         }
 
         mediaMeta.dateTimeOriginal = dateTimeOriginal
