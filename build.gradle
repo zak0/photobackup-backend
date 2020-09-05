@@ -15,7 +15,7 @@ apply plugin: 'kotlinx-serialization'
 
 group 'jaaska.jaakko'
 version '0.0.0'
-mainClassName = "io.ktor.server.netty.EngineMain"
+mainClassName = "jaaska.jaakko.photosapp.server.ApplicationKt"
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']
