@@ -6,6 +6,8 @@ import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.extension.md5String
 import jaaska.jaakko.photosapp.server.filesystem.FileSystemScanner
+import jaaska.jaakko.photosapp.server.model.LibraryScanState
+import jaaska.jaakko.photosapp.server.model.LibraryScanStatus
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
 import jaaska.jaakko.photosapp.server.processor.MediaProcessor
@@ -24,6 +26,7 @@ class MediaRepository(
     private val uploadsDir = config.uploadsDir
 
     private var libraryScanJob: Job? = null
+    @Volatile var libraryScanStatus: LibraryScanStatus? = null
 
     /**
      * Map of [MediaMeta]s, [MediaMeta.id] to [MediaMeta].
@@ -118,12 +121,17 @@ class MediaRepository(
                 // After processing, entries left in this map are files that no longer exist.
                 val removedFiles = HashMap<String, MediaMeta>(mediaMetasByHash)
 
+                var detectedFiles = 0
                 var existingFiles = 0
                 var filesMoved = 0
                 var newFiles = 0
                 var filesRemoved = 0
 
+                libraryScanStatus = LibraryScanStatus(LibraryScanState.SCANNING_FOR_FILES)
+
                 fsScanner.scanForMedia() { meta ->
+                    detectedFiles++
+
                     if (!mediaMetasByHash.containsKey(meta.checksum)) {
                         // This is a new file
                         newFiles++
@@ -134,12 +142,6 @@ class MediaRepository(
 
                         // Add it to caches
                         cacheMedia(meta)
-
-                        // Process it
-                        mediaProcessor.processMedia(meta)
-
-                        // Persist the metadata after processing
-                        db.persistMediaMeta(meta)
                     } else {
                         // This file existed.
                         val existingMeta = mediaMetasByHash[meta.checksum]!!
@@ -156,6 +158,8 @@ class MediaRepository(
 
                         removedFiles.remove(meta.checksum)
                     }
+
+                    libraryScanStatus = libraryScanStatus?.copy(mediaFilesDetected = detectedFiles, filesMoved = filesMoved, newFiles = newFiles)
                 }
 
                 // Delete removed files from the database
@@ -165,6 +169,21 @@ class MediaRepository(
                     db.deleteMediaMeta(removedMeta)
                 }
 
+                // After scan is complete, we have total numbers of removed files.
+                libraryScanStatus = libraryScanStatus?.copy(state = LibraryScanState.PROCESSING_FILES, filesRemoved = filesRemoved)
+
+                // Process files that are pending processing
+                val filesToProcess = mediaMetasCache.values.filter { it.status == MediaStatus.PROCESSING }
+                var filesProcessed = 0
+                libraryScanStatus = libraryScanStatus?.copy(filesToProcess = filesToProcess.size)
+                filesToProcess.forEach { mediaToProcess ->
+                    mediaProcessor.processMedia(mediaToProcess)
+                    db.persistMediaMeta(mediaToProcess)
+                    filesProcessed++
+                    libraryScanStatus = libraryScanStatus?.copy(filesProcessed = filesProcessed)
+                }
+
+                libraryScanStatus = libraryScanStatus?.copy(state = LibraryScanState.DONE)
                 Logger.i("Library scan complete. New files: $newFiles, moved/renamed files: $filesMoved, removed files: $filesRemoved, existing files: $existingFiles")
             }
 

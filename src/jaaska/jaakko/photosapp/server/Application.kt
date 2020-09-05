@@ -98,6 +98,7 @@ fun Application.module() {
                 // TODO Create new user
             }
 
+            // Initiates a new library scan / processing process.
             get("/scanlibrary") {
                 if (mediaRepository.scanLibrary()) {
                     // Library scan was started
@@ -105,6 +106,20 @@ fun Application.module() {
                 } else {
                     // A scan was already running
                     call.respond(HttpStatusCode.Conflict, "Scan is already running")
+                }
+            }
+
+            // Returns status of current library scan / processing.
+            //
+            // If there's a scan in progress, or a scan has happened during this app lifecycle, the server will
+            // respond with 200 and the status.
+            //
+            // If there has not been a scan during this app lifecycle, server responds with 409 and empty body.
+            get("/scanstatus") {
+                mediaRepository.libraryScanStatus?.also { status ->
+                    call.respond(status)
+                } ?: run {
+                    call.respond(HttpStatusCode.Conflict)
                 }
             }
         }
