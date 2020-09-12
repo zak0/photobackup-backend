@@ -13,8 +13,8 @@ class ExifProcessor {
         val mediaFile = File(mediaMeta.absoluteFilePath)
         val exif = ImageMetadataReader.readMetadata(mediaFile).getFirstDirectoryOfType(ExifSubIFDDirectory::class.java)
 
-        return if (exif.containsTag(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)) {
-            exif?.getString(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
+        return if (exif?.containsTag(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) == true) {
+            exif.getString(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
         } else {
             null
         }
