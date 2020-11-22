@@ -20,7 +20,7 @@ import kotlinx.serialization.UnstableDefault
 class ModuleProvider() {
 
     private val mediaDatabase: MediaDatabase by lazy { SqliteMediaDatabase(config) }
-    private val fileSystemScanner: FileSystemScanner by lazy { FileSystemScanner(config, mediaDatabase) }
+    private val fileSystemScanner: FileSystemScanner by lazy { FileSystemScanner(config) }
     private val thumbnailGenerator: ThumbnailGenerator by lazy { ThumbnailGenerator(config) }
     private val exifProcessor: ExifProcessor by lazy { ExifProcessor() }
     private val mediaProcessor: MediaProcessor by lazy { MediaProcessor(thumbnailGenerator, exifProcessor) }

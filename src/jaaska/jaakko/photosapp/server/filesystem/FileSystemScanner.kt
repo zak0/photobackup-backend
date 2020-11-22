@@ -14,9 +14,9 @@ import java.io.File
  *  Object is initialized with [mediaRoots] list of absolute paths to root directories with media to include, and
  *  [metaRoot] absolute path to the directory containing library meta data.
  */
-class FileSystemScanner(config: Config, private val db: MediaDatabase) {
+class FileSystemScanner(config: Config) {
 
-    private val mediaRoots: List<String> = config.mediaDirs
+    private val mediaRoots: List<String> = ArrayList(config.mediaDirs).apply { add(config.uploadsDir) }
     private val metaRoot: String = config.metaRootPath
 
     fun scanForMedia(onMediaFile: (MediaMeta) -> Unit) {
