@@ -72,8 +72,8 @@ abstract class SqliteDatabase(private val dbFilePath: String, private val dbVers
     private fun initialize(connection: Connection) {
         // Check if meta table exists.
         val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "sqlite_master")
-            .addTextCondition("name", "databasemeta")
-            .build()
+                .addTextCondition("name", "databasemeta")
+                .build()
         val dbWasCreated = rowCount(execQuery(connection, sql)) > 0
 
         if (!dbWasCreated) {
@@ -84,8 +84,8 @@ abstract class SqliteDatabase(private val dbFilePath: String, private val dbVers
         } else {
             // If meta table existed, check what the previous database version was.
             val versionSql = QueryBuilder(QueryBuilder.QueryType.SELECT, "databasemeta")
-                .addField("version")
-                .build()
+                    .addField("version")
+                    .build()
             val previousVersion = execQuery(connection, versionSql).getInt("version")
 
             if (previousVersion < dbVersion) {
@@ -95,9 +95,9 @@ abstract class SqliteDatabase(private val dbFilePath: String, private val dbVers
 
                 // ... and update version to current in the database meta table
                 QueryBuilder(QueryBuilder.QueryType.UPDATE, "databasemeta")
-                    .addIntegerValue("version", dbVersion)
-                    .build()
-                    .also { execSql(connection, it) }
+                        .addIntegerValue("version", dbVersion)
+                        .build()
+                        .also { execSql(connection, it) }
                 Logger.i("Database upgrade complete.")
             }
         }
@@ -112,15 +112,16 @@ abstract class SqliteDatabase(private val dbFilePath: String, private val dbVers
     private fun createDatabase(connection: Connection) {
         // Create DB metadata table
         QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "databasemeta")
-            .addField("version", QueryBuilder.FieldType.INTEGER, nullable = false)
-            .build()
-            .also { execSql(connection, it) }
+                .addField("version", QueryBuilder.FieldType.INTEGER, nullable = false)
+                .addField("id", QueryBuilder.FieldType.TEXT, nullable = false)
+                .build()
+                .also { execSql(connection, it) }
 
         // Insert DB version into this new table
         QueryBuilder(QueryBuilder.QueryType.INSERT, "databasemeta")
-            .addIntegerValue("version", dbVersion)
-            .build()
-            .also { execSql(connection, it) }
+                .addIntegerValue("version", dbVersion)
+                .build()
+                .also { execSql(connection, it) }
 
         // Finally run onCreate to create the schema for implementation
         onCreate(connection)
@@ -129,10 +130,11 @@ abstract class SqliteDatabase(private val dbFilePath: String, private val dbVers
     private fun rowCount(resultSet: ResultSet): Int {
         var count = 0
         try {
-            while(resultSet.next()) {
-                count ++
+            while (resultSet.next()) {
+                count++
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
 
         return count
     }

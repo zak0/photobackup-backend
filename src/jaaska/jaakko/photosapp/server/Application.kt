@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
     config?.also {
         val server = embeddedServer(
             Netty,
-            port = 3000,
+            port = it.serverPort,
             module = Application::module
             //watchPaths = listOf("photobackup-backend")
         )
