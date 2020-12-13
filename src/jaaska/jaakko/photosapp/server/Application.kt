@@ -38,8 +38,8 @@ fun main(args: Array<String>) {
     Logger.debugLogging = true
 
     val config = if (args.size < 2) {
-        Logger.i("No config file defined. Using default settings.")
-        moduleProvider.configLoader.loadConfig("./default_config.json")
+        Logger.e("No configuration file defined!")
+        null
     } else {
         moduleProvider.configLoader.loadConfig(args[1])
     }
