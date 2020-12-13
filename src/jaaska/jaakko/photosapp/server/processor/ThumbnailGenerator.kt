@@ -9,13 +9,15 @@ import java.io.File
 
 class ThumbnailGenerator(config: Config) {
 
-    private val metaRoot: String = config.metaRootPath
+    private val thumbnailDirPath: String = "${config.metaRootPath}${OS_PATH_SEPARATOR}thumbs"
 
     fun generateThumbnailForMedia(mediaMeta: MediaMeta, exifOrientation: Int?) {
         require(mediaMeta.id > 0) { "MediaMeta must have a DB ID before it can be processed!" }
 
+        createThumbnailDirIfNeeded()
+
         val mediaFile = File(mediaMeta.absoluteFilePath)
-        val thumbnailFile = File("${metaRoot}${OS_PATH_SEPARATOR}thumbs${OS_PATH_SEPARATOR}${mediaMeta.id}")
+        val thumbnailFile = File("$thumbnailDirPath${OS_PATH_SEPARATOR}${mediaMeta.id}")
 
         Thumbnails.of(mediaFile)
             .size(256, 256)
@@ -34,6 +36,13 @@ class ThumbnailGenerator(config: Config) {
             3 -> 180.0
             6 -> 90.0
             else -> 0.0
+        }
+    }
+
+    private fun createThumbnailDirIfNeeded() {
+        val thumbnailDir = File(thumbnailDirPath)
+        if (!thumbnailDir.exists()) {
+            thumbnailDir.mkdir()
         }
     }
 
