@@ -1,6 +1,7 @@
 package jaaska.jaakko.photosapp.server.configuration
 
 import jaaska.jaakko.photosapp.server.Logger
+import jaaska.jaakko.photosapp.server.extension.asString
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import java.io.File
@@ -19,7 +20,7 @@ class ConfigLoader {
             return null
         }
 
-        val asString = String(file.inputStream().readAllBytes())
+        val asString = file.inputStream().asString()
 
         // Parse config
         val config = try {

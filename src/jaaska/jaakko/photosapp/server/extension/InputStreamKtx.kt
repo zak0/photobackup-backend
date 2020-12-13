@@ -4,8 +4,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import java.io.BufferedReader
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.io.OutputStream
+import java.lang.StringBuilder
 
 /**
  * Copies this [InputStream] to [out] [OutputStream].
@@ -34,4 +37,19 @@ suspend fun InputStream.copyToSuspend(
         }
         return@withContext bytesCopied
     }
+}
+
+/**
+ * Reads an [InputStream] of characters and compiles them into a [String].
+ */
+fun InputStream.asString(): String {
+    val output = StringBuilder()
+    val reader = BufferedReader(InputStreamReader(this))
+    var line = reader.readLine()
+    while (line != null) {
+        output.append(line)
+        line = reader.readLine()
+    }
+    reader.close()
+    return output.toString()
 }

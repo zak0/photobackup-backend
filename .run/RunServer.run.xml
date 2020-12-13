@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="RunServer" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="jaaska.jaakko.photosapp.server.ApplicationKt" />
-    <module name="photosapp.server.main" />
+    <module name="photosapp.server" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
