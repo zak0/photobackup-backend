@@ -113,7 +113,6 @@ abstract class SqliteDatabase(private val dbFilePath: String, private val dbVers
         // Create DB metadata table
         QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "databasemeta")
                 .addField("version", QueryBuilder.FieldType.INTEGER, nullable = false)
-                .addField("id", QueryBuilder.FieldType.TEXT, nullable = false)
                 .build()
                 .also { execSql(connection, it) }
 
