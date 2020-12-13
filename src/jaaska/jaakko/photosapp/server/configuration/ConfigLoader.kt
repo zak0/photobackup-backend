@@ -6,7 +6,6 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import java.io.File
 
-@UnstableDefault
 class ConfigLoader {
 
     lateinit var config: Config
@@ -24,7 +23,7 @@ class ConfigLoader {
 
         // Parse config
         val config = try {
-            parseConfig(asString)
+            Json.decodeFromString<Config>(asString)
         } catch (e: Exception) {
             Logger.e("Config file parsing failed: ", e)
             null
@@ -39,22 +38,6 @@ class ConfigLoader {
 
         // Return Config when all good, null otherwise
         return if (isValid) config else null
-    }
-
-    private fun parseConfig(jsonString: String): Config {
-        val root = Json.parseJson(jsonString).jsonObject
-        val metaRootPath = root["metaRootPath"]!!.content
-        val mediaDirs = ArrayList<String>()
-        root["mediaDirs"]!!.jsonArray.forEach { mediaDirs.add(it.content) }
-        val uploadsDir = root["uploadsDir"]!!.content
-        val serverPort = root["serverPort"]!!.int
-
-        return Config(
-            metaRootPath,
-            mediaDirs,
-            uploadsDir,
-            serverPort
-        )
     }
 
     private fun configIsValid(config: Config): Boolean {

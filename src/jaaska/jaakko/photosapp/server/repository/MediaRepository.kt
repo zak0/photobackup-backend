@@ -14,7 +14,6 @@ import jaaska.jaakko.photosapp.server.processor.MediaProcessor
 import kotlinx.coroutines.*
 import java.io.File
 
-@ObsoleteCoroutinesApi
 class MediaRepository(
     private val db: MediaDatabase,
     private val fsScanner: FileSystemScanner,

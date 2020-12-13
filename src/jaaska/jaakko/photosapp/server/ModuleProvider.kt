@@ -10,13 +10,10 @@ import jaaska.jaakko.photosapp.server.processor.MediaProcessor
 import jaaska.jaakko.photosapp.server.processor.ThumbnailGenerator
 import jaaska.jaakko.photosapp.server.repository.MediaRepository
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.serialization.UnstableDefault
 
 /**
  * Pure DI "composition root".
  */
-@ObsoleteCoroutinesApi
-@UnstableDefault
 class ModuleProvider() {
 
     private val mediaDatabase: MediaDatabase by lazy { SqliteMediaDatabase(config) }
