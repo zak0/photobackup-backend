@@ -4,10 +4,21 @@ import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import java.sql.Connection
+import java.sql.ResultSet
 
-class SqliteMediaDatabase(config: Config) : MediaDatabase, SqliteDatabase("${config.metaRootPath}${OS_PATH_SEPARATOR}meta.db", 2) {
+class SqliteMediaDatabase(config: Config) : MediaDatabase, KeyValueDatabase,
+    SqliteDatabase("${config.metaRootPath}${OS_PATH_SEPARATOR}meta.db", 2) {
 
     override fun onCreate(connection: Connection) {
+        val createKeyValueSql = QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "keyvalue")
+            .addField("id", QueryBuilder.FieldType.INTEGER, nullable = false, primaryKey = true)
+            .addField("key", QueryBuilder.FieldType.TEXT, nullable = false)
+            .addField("textvalue", QueryBuilder.FieldType.TEXT)
+            .addField("integervalue", QueryBuilder.FieldType.INTEGER)
+            .addField("realvalue", QueryBuilder.FieldType.REAL)
+            .addField("lastchanged", QueryBuilder.FieldType.INTEGER, nullable = false)
+            .build()
+
         val createMediaSql = QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "media")
             .addField("id", QueryBuilder.FieldType.INTEGER, nullable = false, primaryKey = true)
             .addField("filename", QueryBuilder.FieldType.TEXT)
@@ -18,6 +29,7 @@ class SqliteMediaDatabase(config: Config) : MediaDatabase, SqliteDatabase("${con
             .addField("datetimeoriginal", QueryBuilder.FieldType.TEXT)
             .build()
 
+        execSql(connection, createKeyValueSql)
         execSql(connection, createMediaSql)
     }
 
@@ -128,8 +140,88 @@ class SqliteMediaDatabase(config: Config) : MediaDatabase, SqliteDatabase("${con
             .build()
 
         val result = execQuery(connection, sql)
-        val lastInsertId = result.getInt("seq")
+        return result.getInt("seq")
+    }
 
-        return lastInsertId
+    override fun contains(key: String): Boolean {
+        var contains = false
+
+        dbIo {
+            val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "keyvalue")
+                .build()
+            val result = execQuery(it, sql)
+
+            if (result.next()) {
+                contains = true
+            }
+        }
+
+        return contains
+    }
+
+    private fun <T> getValue(forKey: String, processResult: (row: ResultSet?) -> T): T? {
+        return dbIo {
+            val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "keyvalue")
+                .addTextCondition("key", forKey)
+                .build()
+
+            val result = execQuery(it, sql)
+
+            if (result.next()) {
+                processResult(result)
+            } else {
+                processResult(null)
+            }
+        }
+    }
+
+    override fun getString(key: String): String? = getValue(key) { it?.getString("textvalue") }
+
+    override fun getInt(key: String): Int? = getValue(key) { it?.getInt("integervalue") }
+
+    override fun getLong(key: String): Long? = getValue(key) { it?.getLong("integervalue") }
+
+    override fun getDouble(key: String): Double? = getValue(key) { it?.getDouble("realvalue") }
+
+    private fun <T> putValue(key: String, value: T) {
+        val exists = contains(key)
+
+        dbIo {
+            val queryType = if (exists) QueryBuilder.QueryType.UPDATE else QueryBuilder.QueryType.INSERT
+            val queryBuilder = QueryBuilder(queryType, "keyvalue")
+                .addLongValue("lastchanged", System.currentTimeMillis())
+
+            when (value) {
+                is String -> queryBuilder.addTextValue("textvalue", value)
+                is Int -> queryBuilder.addIntegerValue("integervalue", value)
+                is Long -> queryBuilder.addLongValue("integervalue", value)
+                is Double -> queryBuilder.addDoubleValue("realvalue", value)
+                else -> error("Unsupported value for key-value store: $value")
+            }
+
+            if (exists) {
+                queryBuilder.addTextCondition("key", key)
+            } else {
+                queryBuilder.addTextValue("key", key)
+            }
+
+            execSql(it, queryBuilder.build())
+        }
+    }
+
+    override fun putString(key: String, value: String) = putValue(key, value)
+
+    override fun putInt(key: String, value: Int) = putValue(key, value)
+
+    override fun putLong(key: String, value: Long) = putValue(key, value)
+
+    override fun putDouble(key: String, value: Double) = putValue(key, value)
+
+    override fun delete(key: String) {
+        dbIo { connection ->
+            QueryBuilder(QueryBuilder.QueryType.DELETE, "keyvalue")
+                .addTextCondition("key", key)
+                .build().also { execSql(connection, it) }
+        }
     }
 }

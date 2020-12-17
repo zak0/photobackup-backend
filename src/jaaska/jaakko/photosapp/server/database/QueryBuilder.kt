@@ -22,7 +22,8 @@ internal class QueryBuilder(private val queryType: QueryType, private var tableN
 
     enum class FieldType(val sql: String) {
         TEXT("TEXT"),
-        INTEGER("INTEGER")
+        INTEGER("INTEGER"),
+        REAL("REAL")
     }
 
     private class FieldSpec(
@@ -58,6 +59,13 @@ internal class QueryBuilder(private val queryType: QueryType, private var tableN
     private class LongColumnValue(
         columnName: String,
         columnValue: Long?
+    ) : ColumnValue(columnName) {
+        override val value: String? = columnValue?.let { "$it" }
+    }
+
+    private class DoubleColumnValue(
+        columnName: String,
+        columnValue: Double?
     ) : ColumnValue(columnName) {
         override val value: String? = columnValue?.let { "$it" }
     }
@@ -143,6 +151,17 @@ internal class QueryBuilder(private val queryType: QueryType, private var tableN
         value: Long?
     ): QueryBuilder {
         columnValues.add(LongColumnValue(fieldName, value))
+        return this
+    }
+
+    /**
+     * Adds a [Double] value into a data modification query.
+     */
+    fun addDoubleValue(
+        fieldName: String,
+        value: Double?
+    ): QueryBuilder {
+        columnValues.add(DoubleColumnValue(fieldName, value))
         return this
     }
 
