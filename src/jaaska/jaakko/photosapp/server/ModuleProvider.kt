@@ -3,20 +3,19 @@ package jaaska.jaakko.photosapp.server
 import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.configuration.ConfigLoader
 import jaaska.jaakko.photosapp.server.database.MediaDatabase
-import jaaska.jaakko.photosapp.server.database.SqliteMediaDatabase
+import jaaska.jaakko.photosapp.server.database.SqliteMetaDatabase
 import jaaska.jaakko.photosapp.server.filesystem.FileSystemScanner
 import jaaska.jaakko.photosapp.server.processor.ExifProcessor
 import jaaska.jaakko.photosapp.server.processor.MediaProcessor
 import jaaska.jaakko.photosapp.server.processor.ThumbnailGenerator
 import jaaska.jaakko.photosapp.server.repository.MediaRepository
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 
 /**
  * Pure DI "composition root".
  */
 class ModuleProvider() {
 
-    private val mediaDatabase: MediaDatabase by lazy { SqliteMediaDatabase(config) }
+    private val mediaDatabase: MediaDatabase by lazy { SqliteMetaDatabase(config) }
     private val fileSystemScanner: FileSystemScanner by lazy { FileSystemScanner(config) }
     private val thumbnailGenerator: ThumbnailGenerator by lazy { ThumbnailGenerator(config) }
     private val exifProcessor: ExifProcessor by lazy { ExifProcessor() }
