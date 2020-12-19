@@ -1,27 +1,16 @@
 package jaaska.jaakko.photosapp.server
 
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
+import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.features.ContentNegotiation
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.http.content.streamProvider
-import io.ktor.request.receive
-import io.ktor.request.receiveMultipart
-import io.ktor.response.respond
-import io.ktor.response.respondFile
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.route
-import io.ktor.routing.routing
-import io.ktor.serialization.json
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.features.*
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.request.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.serialization.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import jaaska.jaakko.photosapp.server.extension.copyToSuspend
 import jaaska.jaakko.photosapp.server.extension.noneAreNull
@@ -30,7 +19,6 @@ import jaaska.jaakko.photosapp.server.model.MediaStatus
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import java.io.File
 
-@ObsoleteCoroutinesApi
 val moduleProvider by lazy { ModuleProvider() }
 
 @ObsoleteCoroutinesApi
@@ -207,7 +195,7 @@ fun Application.module() {
                                 val file = File(mediaMeta.dirPath, mediaMeta.fileName)
                                 call.receiveMultipart().forEachPart { part ->
                                     if (part is PartData.FileItem) {
-                                        part.originalFileName?.also { filename ->
+                                        part.originalFileName?.also {
                                             part.streamProvider().use { input ->
                                                 file.outputStream().buffered()
                                                     .use { output -> input.copyToSuspend(output) }
