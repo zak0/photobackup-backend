@@ -69,6 +69,7 @@ fun main(args: Array<String>) {
 fun Application.module() {
 
     val mediaRepository = moduleProvider.mediaRepository
+    val serverInfoRepository = moduleProvider.serverInfoRepository
 
     install(Authentication) {
         basic("defaultAdminAuth") {
@@ -89,7 +90,7 @@ fun Application.module() {
 
     routing {
         get("/") {
-            call.respondText("photosapp-backend", contentType = ContentType.Text.Plain)
+            call.respond(serverInfoRepository.getServerInfo())
         }
 
         //
