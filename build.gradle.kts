@@ -5,17 +5,16 @@ buildscript {
     }
 
     dependencies {
-        val kotlinVersion = property("kotlin_version")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-        classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
-        classpath("com.github.jengelman.gradle.plugins:shadow:6.1.0") // ... for packaging into a JAR
-        classpath("com.github.gmazzo:gradle-buildconfig-plugin:2.0.2") // ... for "BuildConfig" object generation
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-serialization")
+        classpath("com.github.jengelman.gradle.plugins:shadow") // ... for packaging into a JAR
+        classpath("com.github.gmazzo:gradle-buildconfig-plugin") // ... for "BuildConfig" object generation
     }
 }
 
 plugins {
-    kotlin("jvm") version "1.4.21"
-    kotlin("plugin.serialization") version "1.4.21"
+    kotlin("jvm") version Versions.kotlin
+    kotlin("plugin.serialization") version Versions.kotlin
     application
     id("com.github.gmazzo.buildconfig") version "2.0.2"
     id("com.github.johnrengelman.shadow") version "6.1.0"
@@ -23,11 +22,8 @@ plugins {
 
 // BuildConfig with https://github.com/gmazzo/gradle-buildconfig-plugin .
 buildConfig {
-    val appVersionName = property("appVersionName")
-    val appVersionCode = property("appVersionCode")
-
-    buildConfigField("String", "versionName", "\"$appVersionName\"")
-    buildConfigField("Int", "versionCode", "$appVersionCode")
+    buildConfigField("String", "versionName", "\"${Versions.appVersionName}\"")
+    buildConfigField("Int", "versionCode", "${Versions.appVersionCode}")
 }
 
 sourceSets {
@@ -59,27 +55,19 @@ repositories {
 }
 
 dependencies {
-    val kotlinVersion = property("kotlin_version")
-    val ktorVersion = property("ktor_version")
-    val logbackVersion = property("logback_version")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}")
+    implementation("ch.qos.logback:logback-classic:${Versions.logback}") // Logger used by Ktor
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion") // Logger used by Ktor
-
-
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-server-core:${Versions.ktor}")
+    implementation("io.ktor:ktor-auth:${Versions.ktor}")
+    implementation("io.ktor:ktor-server-netty:${Versions.ktor}")
+    implementation("io.ktor:ktor-serialization:${Versions.ktor}")
     implementation("org.xerial:sqlite-jdbc:3.32.3.2") // SQLite DB driver
     implementation("net.coobird:thumbnailator:0.4.3") // For thumbnails
     implementation("com.drewnoakes:metadata-extractor:2.14.0") // For EXIF
-    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-tests:${Versions.ktor}")
 }
-
-val appVersionName = property("appVersionName")
-val appVersionCode = property("appVersionCode")
 
 setProperty("mainClassName", "jaaska.jaakko.photosapp.server.ApplicationKt")
 group = "jaaska.jaakko"
-version = "$appVersionName-$appVersionCode"
+version = "${Versions.appVersionName}-${Versions.appVersionCode}"
