@@ -17,7 +17,7 @@ apply plugin: "com.github.johnrengelman.shadow"
 
 mainClassName = "jaaska.jaakko.photosapp.server.ApplicationKt"
 group 'jaaska.jaakko'
-version "$appVersion"
+version "$appVersionName-$appVersionCode"
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']
@@ -52,5 +52,5 @@ dependencies {
 shadowJar {
     // archiveBaseName.set("photosapp-server") // TODO If this is uncommented, outputs two JARs. See what's up with that
     archiveClassifier.set("")
-    archiveVersion.set("$appVersion")
+    archiveVersion.set("$project.version")
 }
