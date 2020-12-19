@@ -2,6 +2,8 @@ package jaaska.jaakko.photosapp.server
 
 import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.configuration.ConfigLoader
+import jaaska.jaakko.photosapp.server.database.KeyValueDatabase
+import jaaska.jaakko.photosapp.server.database.KeyValueStore
 import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.database.SqliteMetaDatabase
 import jaaska.jaakko.photosapp.server.filesystem.FileSystemScanner
@@ -15,7 +17,12 @@ import jaaska.jaakko.photosapp.server.repository.MediaRepository
  */
 class ModuleProvider() {
 
-    private val mediaDatabase: MediaDatabase by lazy { SqliteMetaDatabase(config) }
+    private val metaDatabase by lazy { SqliteMetaDatabase(config) }
+    private val mediaDatabase: MediaDatabase by lazy { metaDatabase }
+    private val keyValueDatabase: KeyValueDatabase by lazy { metaDatabase }
+
+    private val keyValueStore: KeyValueStore by lazy { KeyValueStore(keyValueDatabase) }
+
     private val fileSystemScanner: FileSystemScanner by lazy { FileSystemScanner(config) }
     private val thumbnailGenerator: ThumbnailGenerator by lazy { ThumbnailGenerator(config) }
     private val exifProcessor: ExifProcessor by lazy { ExifProcessor() }

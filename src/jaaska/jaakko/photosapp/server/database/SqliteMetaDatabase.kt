@@ -148,6 +148,7 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase,
 
         dbIo {
             val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "keyvalue")
+                .addTextCondition("key", key)
                 .build()
             val result = execQuery(it, sql)
 
