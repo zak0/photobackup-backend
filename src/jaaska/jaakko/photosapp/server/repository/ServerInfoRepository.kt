@@ -1,5 +1,6 @@
 package jaaska.jaakko.photosapp.server.repository
 
+import jaaska.jaakko.photosapp.server.BuildConfig
 import jaaska.jaakko.photosapp.server.database.KeyValueStore
 import jaaska.jaakko.photosapp.server.model.ServerInfo
 import kotlin.random.Random
@@ -35,7 +36,8 @@ class ServerInfoRepository(
         return ServerInfo(
             keyValueStore.get(KEY_SERVER_ID) ?: error("Server info is not initialized!"),
             keyValueStore.get(KEY_SERVER_NAME) ?: error("Server info is not initialized!"),
-            -1 // TODO
+            BuildConfig.versionName,
+            BuildConfig.versionCode // TODO
         )
     }
 }

@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class ServerInfo(
     val serverId: String,
     val serverName: String,
-    val serverVersion: Int
+    val serverVersionName: String,
+    val serverVersionCode: Int
 )
