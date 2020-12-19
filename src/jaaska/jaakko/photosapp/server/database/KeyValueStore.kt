@@ -28,7 +28,7 @@ class KeyValueStore(
         }
     }
 
-    fun clear(key: String) {
-        db.delete(key)
-    }
+    fun contains(key: String): Boolean = db.contains(key)
+
+    fun delete(key: String) = db.delete(key)
 }

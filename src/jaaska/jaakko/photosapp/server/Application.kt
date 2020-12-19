@@ -51,6 +51,12 @@ fun main(args: Array<String>) {
             module = Application::module
             //watchPaths = listOf("photobackup-backend")
         )
+
+        moduleProvider.serverInfoRepository.initIfNeeded()
+        moduleProvider.serverInfoRepository.getServerInfo().also {
+            Logger.i("Starting server ID '${it.serverId}'.")
+        }
+
         server.start(wait = true)
     } ?: run {
         Logger.e("No valid configuration!")

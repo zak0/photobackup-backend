@@ -11,6 +11,7 @@ import jaaska.jaakko.photosapp.server.processor.ExifProcessor
 import jaaska.jaakko.photosapp.server.processor.MediaProcessor
 import jaaska.jaakko.photosapp.server.processor.ThumbnailGenerator
 import jaaska.jaakko.photosapp.server.repository.MediaRepository
+import jaaska.jaakko.photosapp.server.repository.ServerInfoRepository
 
 /**
  * Pure DI "composition root".
@@ -40,6 +41,12 @@ class ModuleProvider() {
             fileSystemScanner,
             config,
             mediaProcessor
+        )
+    }
+
+    val serverInfoRepository: ServerInfoRepository by lazy {
+        ServerInfoRepository(
+            keyValueStore
         )
     }
 
