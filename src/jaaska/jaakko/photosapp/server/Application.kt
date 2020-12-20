@@ -40,10 +40,14 @@ fun main(args: Array<String>) {
             //watchPaths = listOf("photobackup-backend")
         )
 
-        moduleProvider.serverInfoRepository.initIfNeeded()
-        moduleProvider.serverInfoRepository.getServerInfo().also {
-            Logger.i("Starting server ID '${it.serverId}'.")
+        moduleProvider.serverInfoRepository.apply {
+            initIfNeeded()
+            getServerInfo().also {
+                Logger.i("Starting server ID '${it.serverId}'.")
+            }
         }
+
+        moduleProvider.usersRepository.initWithAdminUserIfNeeded()
 
         server.start(wait = true)
     } ?: run {

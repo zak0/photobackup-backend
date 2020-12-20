@@ -3,10 +3,12 @@ package jaaska.jaakko.photosapp.server.database
 import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.User
+import jaaska.jaakko.photosapp.server.model.UserType
 import java.sql.Connection
 import java.sql.ResultSet
 
-class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase,
+class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase, UsersDatabase,
     SqliteDatabase("${config.metaRootPath}${OS_PATH_SEPARATOR}meta.db", 2) {
 
     override fun onCreate(connection: Connection) {
@@ -17,6 +19,13 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase,
             .addField("integervalue", QueryBuilder.FieldType.INTEGER)
             .addField("realvalue", QueryBuilder.FieldType.REAL)
             .addField("lastchanged", QueryBuilder.FieldType.INTEGER, nullable = false)
+            .build()
+
+        val createUserSql = QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "user")
+            .addField("id", QueryBuilder.FieldType.INTEGER, nullable = false, primaryKey = true)
+            .addField("name", QueryBuilder.FieldType.TEXT, nullable = false)
+            .addField("passwordhash", QueryBuilder.FieldType.TEXT, nullable = false)
+            .addField("type", QueryBuilder.FieldType.TEXT, nullable = false)
             .build()
 
         val createMediaSql = QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "media")
@@ -30,6 +39,7 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase,
             .build()
 
         execSql(connection, createKeyValueSql)
+        execSql(connection, createUserSql)
         execSql(connection, createMediaSql)
     }
 
@@ -222,6 +232,83 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase,
         dbIo { connection ->
             QueryBuilder(QueryBuilder.QueryType.DELETE, "keyvalue")
                 .addTextCondition("key", key)
+                .build().also { execSql(connection, it) }
+        }
+    }
+
+    override fun getAllUsers(): List<User> {
+        val ret = ArrayList<User>()
+
+        dbIo {
+            val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "user").build()
+            val result = execQuery(it, sql)
+
+            while (result.next()) {
+                ret.add(
+                    User(
+                        result.getString("name"),
+                        result.getString("passwordhash"),
+                        UserType.fromString(result.getString("type")),
+                        result.getInt("id")
+                    )
+                )
+            }
+        }
+
+        return ret
+    }
+
+    override fun getUser(id: Int): User? {
+        return dbIo {
+            val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "user")
+                .addIntegerCondition("id", id)
+                .build()
+
+            val result = execQuery(it, sql)
+
+            if (result.next()) {
+                User(
+                    result.getString("name"),
+                    result.getString("passwordhash"),
+                    UserType.fromString(result.getString("type")),
+                    result.getInt("id")
+                )
+            } else {
+                null
+            }
+        }
+    }
+
+    override fun persistUser(user: User) {
+        dbIo { connection ->
+            if (user.id >= 0) {
+                // UPDATE existing
+                // Only password and account type are changeable!
+                val sql = QueryBuilder(QueryBuilder.QueryType.UPDATE, "user")
+                    .addTextValue("passwordhash", user.passwordHash)
+                    .addTextValue("type", user.type.name)
+                    .addIntegerCondition("id", user.id)
+                    .build()
+
+                execSql(connection, sql)
+            } else {
+                // INSERT new
+                val sql = QueryBuilder(QueryBuilder.QueryType.INSERT, "user")
+                    .addTextValue("name", user.name)
+                    .addTextValue("passwordhash", user.passwordHash)
+                    .addTextValue("type", user.type.name)
+                    .build()
+
+                execSql(connection, sql)
+                user.id = getLastInsertId(connection, "user")
+            }
+        }
+    }
+
+    override fun deleteUser(user: User) {
+        dbIo { connection ->
+            QueryBuilder(QueryBuilder.QueryType.DELETE, "user")
+                .addIntegerCondition("id", user.id)
                 .build().also { execSql(connection, it) }
         }
     }

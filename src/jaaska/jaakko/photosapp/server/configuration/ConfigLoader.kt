@@ -41,6 +41,9 @@ class ConfigLoader {
     }
 
     private fun configIsValid(config: Config): Boolean {
+        // Initial admin password must not be empty
+        val initialAdminPwOk = config.initialAdminPassword.isNotBlank()
+
         // Check that directories exist
         val metaDirExists = File(config.metaRootPath).exists()
         val mediaDirsExist = config.mediaDirs.count { File(it).exists() } == config.mediaDirs.size
@@ -49,7 +52,7 @@ class ConfigLoader {
         // Check that server port is sensible
         val portIsSensible = config.serverPort in 2..65535
 
-        return metaDirExists && mediaDirsExist && uploadsDirExists && portIsSensible
+        return metaDirExists && mediaDirsExist && uploadsDirExists && portIsSensible && initialAdminPwOk
     }
 
 }

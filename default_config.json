@@ -1,4 +1,5 @@
 {
+  "initialAdminPassword": "passwordd",
   "metaRootPath": "/home/jaakko/temp/photobackup/meta",
   "mediaDirs": ["/home/jaakko/temp/photobackup/media"],
   "uploadsDir": "/home/jaakko/temp/photobackup/uploads",
