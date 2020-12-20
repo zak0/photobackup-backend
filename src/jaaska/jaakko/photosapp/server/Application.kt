@@ -62,17 +62,21 @@ fun Application.module() {
 
     val mediaRepository = moduleProvider.mediaRepository
     val serverInfoRepository = moduleProvider.serverInfoRepository
+    val usersRepository = moduleProvider.usersRepository
 
     install(Authentication) {
-        basic("defaultAdminAuth") {
-            realm = "Ktor Server"
-            validate { if (it.name == "jaakkoadmin" && it.password == "SalainenSana1324!@") UserIdPrincipal(it.name) else null }
+        basic("adminAuth") {
+            realm = "photosapp-server"
+            validate {
+                usersRepository.validateAdmin(it.name, it.password)?.let { user -> UserIdPrincipal("${user.id}") }
+            }
         }
 
         basic("usersAuth") {
-            // TODO Validate users
-            realm = "Ktor Server"
-            validate { if (it.name == "jaakkoadmin" && it.password == "SalainenSana1324!@") UserIdPrincipal(it.name) else null }
+            realm = "photosapp-server"
+            validate {
+                usersRepository.validateUser(it.name, it.password)?.let { user -> UserIdPrincipal("${user.id}") }
+            }
         }
     }
 
@@ -88,7 +92,7 @@ fun Application.module() {
         //
         //
         // ADMIN ENDPOINTS
-        authenticate("defaultAdminAuth") {
+        authenticate("adminAuth") {
             post("/user") {
                 // TODO Create new user
             }

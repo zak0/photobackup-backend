@@ -27,4 +27,16 @@ class UsersRepository(
         }
     }
 
+    /**
+     * @return [User] matching given username and password, if also its type is [UserType.Admin]. Otherwise null.
+     */
+    fun validateAdmin(username: String, password: String): User? =
+        validateUser(username, password)?.takeIf { it.type == UserType.Admin }
+
+    /**
+     * @return [User] matching given username and password. If no match is found, null.
+     */
+    fun validateUser(username: String, password: String): User? =
+        db.getAllUsers().firstOrNull { it.name == username }?.takeIf { it.passwordHash == password.md5() }
+
 }
