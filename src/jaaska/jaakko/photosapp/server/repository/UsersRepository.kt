@@ -27,6 +27,38 @@ class UsersRepository(
         }
     }
 
+    fun getAll(): List<User> = db.getAllUsers()
+
+    fun getUser(id: Int): User? = db.getUser(id)
+
+    /**
+     * Creates given [user] into the system.
+     *
+     * @return [User] with filled in changes made by the server, null if creation fails.
+     */
+    fun createUser(user: User): User? {
+        return if (!getAll().contains { it.name == user.name }) {
+            db.persistUser(user)
+            user.takeIf { it.id >= 0 }
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Updates given [user]'s record in the system. Use this to change password or user type.
+     *
+     * @return [User] with done changes applied.
+     */
+    fun updateUser(user: User): User {
+        db.persistUser(user)
+
+        // Check if the changes were applied. Return user if they were, null if not (this means update failed).
+        return getAll().first { it.id == user.id }
+    }
+
+    fun deleteUser(user: User) = db.deleteUser(user)
+
     /**
      * @return [User] matching given username and password, if also its type is [UserType.Admin]. Otherwise null.
      */

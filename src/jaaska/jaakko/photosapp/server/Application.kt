@@ -16,6 +16,8 @@ import jaaska.jaakko.photosapp.server.extension.copyToSuspend
 import jaaska.jaakko.photosapp.server.extension.noneAreNull
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
+import jaaska.jaakko.photosapp.server.model.User
+import jaaska.jaakko.photosapp.server.model.UserType
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import java.io.File
 
@@ -93,8 +95,44 @@ fun Application.module() {
         //
         // ADMIN ENDPOINTS
         authenticate("adminAuth") {
-            post("/user") {
-                // TODO Create new user
+            route("/user") {
+                get("/") {
+                    call.respond(usersRepository.getAll())
+                }
+
+                get("/{id}") {
+                    usersRepository.getUser(call.parameters["id"]?.toInt() ?: -1)?.also {
+                        call.respond(it)
+                    } ?: call.respond(HttpStatusCode.NotFound)
+                }
+
+                // Creation of a new user...
+                post("/") {
+                    val newUser = call.receive<User>()
+                    usersRepository.createUser(newUser)?.also {
+                        call.respond(HttpStatusCode.Created, it)
+                    } ?: run {
+                        // TODO Capture different causes of errors and return appropriate codes
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
+                }
+
+                // Update of an existing user...
+                // An admin can edit every user
+                put("/{id}") {
+                    val user = call.receive<User>()
+                    usersRepository.updateUser(user).also {
+                        call.respond(HttpStatusCode.OK, it)
+                    }
+                }
+
+                delete("/{id}") {
+                    usersRepository.getUser(call.parameters["id"]?.toInt() ?: -1)?.also {
+                        usersRepository.deleteUser(it)
+                        call.respond(HttpStatusCode.OK)
+                    } ?: call.respond(HttpStatusCode.NotFound)
+                }
+
             }
 
             // Initiates a new library scan / processing process.
