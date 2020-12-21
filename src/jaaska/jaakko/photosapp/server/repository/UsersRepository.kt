@@ -52,12 +52,23 @@ class UsersRepository(
      */
     fun updateUser(user: User): User {
         db.persistUser(user)
-
-        // Check if the changes were applied. Return user if they were, null if not (this means update failed).
         return getAll().first { it.id == user.id }
     }
 
     fun deleteUser(user: User) = db.deleteUser(user)
+
+    /**
+     * Changes the password of the user in the database. Be sure to validate the user before calling this to ensure
+     * this is called for the currently logged in user only!
+     *
+     * @return [Boolean] true if password was changed, false otherwise
+     */
+    fun changePassword(userId: Int, newPasswordHash: String): Boolean {
+        val updateResult = getUser(userId)?.copy(passwordHash = newPasswordHash)?.let { updateUser(it) }
+
+        // Check if the password was changed
+        return updateResult?.passwordHash == newPasswordHash
+    }
 
     /**
      * @return [User] matching given username and password, if also its type is [UserType.Admin]. Otherwise null.

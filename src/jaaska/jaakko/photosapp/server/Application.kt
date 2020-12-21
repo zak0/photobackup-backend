@@ -14,10 +14,7 @@ import io.ktor.server.netty.*
 import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import jaaska.jaakko.photosapp.server.extension.copyToSuspend
 import jaaska.jaakko.photosapp.server.extension.noneAreNull
-import jaaska.jaakko.photosapp.server.model.MediaMeta
-import jaaska.jaakko.photosapp.server.model.MediaStatus
-import jaaska.jaakko.photosapp.server.model.User
-import jaaska.jaakko.photosapp.server.model.UserType
+import jaaska.jaakko.photosapp.server.model.*
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import java.io.File
 
@@ -165,9 +162,15 @@ fun Application.module() {
         //
         // USER ENDPOINTS
         authenticate("usersAuth") {
-            get("/protected/route/basic") {
-                val principal = call.principal<UserIdPrincipal>()!!
-                call.respondText("Hello ${principal.name}")
+
+            post("/changepassword") {
+                val userId = call.principal<UserIdPrincipal>()!!.name.toInt()
+                val newPassHash = call.receive<ChangePasswordBody>().newPasswordHash
+                if (usersRepository.changePassword(userId, newPassHash)) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError) // TODO More sensible error code?
+                }
             }
 
             route("/media") {
