@@ -11,8 +11,21 @@ val File.isSupportedImageFile: Boolean
             return false
         }
 
-        val fileExtension = absolutePath.split(".").lastOrNull() ?: ""
         return Constants.SUPPORTED_IMAGE_FILE_EXTENSIONS.contains(fileExtension.toLowerCase())
+    }
+
+val File.isSupportedVideoFile: Boolean
+    get() {
+        if (!isFile) {
+            return false
+        }
+
+        return Constants.SUPPORTED_VIDEO_FILE_EXTENSIONS.contains(fileExtension.toLowerCase())
+    }
+
+val File.fileExtension: String
+    get() {
+        return absolutePath.split(".").lastOrNull() ?: ""
     }
 
 val File.md5String: String

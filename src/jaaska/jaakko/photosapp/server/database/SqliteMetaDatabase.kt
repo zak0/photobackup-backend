@@ -3,6 +3,7 @@ package jaaska.jaakko.photosapp.server.database
 import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.MediaType
 import jaaska.jaakko.photosapp.server.model.User
 import jaaska.jaakko.photosapp.server.model.UserType
 import java.sql.Connection
@@ -30,6 +31,7 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase, User
 
         val createMediaSql = QueryBuilder(QueryBuilder.QueryType.CREATE_TABLE, "media")
             .addField("id", QueryBuilder.FieldType.INTEGER, nullable = false, primaryKey = true)
+            .addField("type", QueryBuilder.FieldType.TEXT, nullable = false)
             .addField("filename", QueryBuilder.FieldType.TEXT)
             .addField("dirpath", QueryBuilder.FieldType.TEXT)
             .addField("filesize", QueryBuilder.FieldType.INTEGER)
@@ -50,14 +52,15 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase, User
     override fun getMediaMetas(): List<MediaMeta> {
         val ret = ArrayList<MediaMeta>()
 
-        dbIo {
+        dbIo { connection ->
             val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "media").build()
-            val result = execQuery(it, sql)
+            val result = execQuery(connection, sql)
 
             while (result.next()) {
                 ret.add(
                     MediaMeta(
                         result.getInt("id"),
+                        result.getString("type").let { MediaType.fromString(it) },
                         result.getString("filename"),
                         result.getLong("filesize"),
                         result.getString("dirpath"),
@@ -75,15 +78,16 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase, User
     override fun getMediaMeta(id: Int): MediaMeta? {
         var mediaMeta: MediaMeta? = null
 
-        dbIo {
+        dbIo { connection ->
             val sql = QueryBuilder(QueryBuilder.QueryType.SELECT_ALL, "media")
                 .addIntegerCondition("id", id)
                 .build()
-            val result = execQuery(it, sql)
+            val result = execQuery(connection, sql)
 
             if (result.next()) {
                 mediaMeta = MediaMeta(
                     result.getInt("id"),
+                    result.getString("type").let { MediaType.fromString(it) },
                     result.getString("filename"),
                     result.getLong("filesize"),
                     result.getString("dirpath"),
@@ -102,6 +106,7 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase, User
             if (mediaMeta.id >= 0) {
                 // UPDATE existing
                 val sql = QueryBuilder(QueryBuilder.QueryType.UPDATE, "media")
+                    .addTextValue("type", mediaMeta.type.name)
                     .addTextValue("filename", mediaMeta.fileName)
                     .addTextValue("dirpath", mediaMeta.dirPath)
                     .addLongValue("filesize", mediaMeta.fileSize)
@@ -115,6 +120,7 @@ class SqliteMetaDatabase(config: Config) : MediaDatabase, KeyValueDatabase, User
             } else {
                 // INSERT new
                 val sql = QueryBuilder(QueryBuilder.QueryType.INSERT, "media")
+                    .addTextValue("type", mediaMeta.type.name)
                     .addTextValue("filename", mediaMeta.fileName)
                     .addTextValue("dirpath", mediaMeta.dirPath)
                     .addLongValue("filesize", mediaMeta.fileSize)

@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class MediaMeta(
     var id: Int,
+    var type: MediaType,
     var fileName: String,
     var fileSize: Long,
     var dirPath: String,

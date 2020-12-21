@@ -2,10 +2,11 @@ package jaaska.jaakko.photosapp.server.filesystem
 
 import jaaska.jaakko.photosapp.server.Logger
 import jaaska.jaakko.photosapp.server.configuration.Config
-import jaaska.jaakko.photosapp.server.database.MediaDatabase
 import jaaska.jaakko.photosapp.server.extension.isSupportedImageFile
+import jaaska.jaakko.photosapp.server.extension.isSupportedVideoFile
 import jaaska.jaakko.photosapp.server.extension.md5String
 import jaaska.jaakko.photosapp.server.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.MediaType
 import java.io.File
 
 /**
@@ -35,8 +36,11 @@ class FileSystemScanner(config: Config) {
 
                 // Handle supported media files
                 if (file.isSupportedImageFile) {
-                    Logger.d("${file.absolutePath} - ${file.md5String} - ${file.length()}")
+                    Logger.d("Picture - ${file.absolutePath} - ${file.md5String} - ${file.length()}")
                     handleImageFile(file, onMediaFile)
+                } else if (file.isSupportedVideoFile) {
+                    Logger.d("Video - ${file.absolutePath} - ${file.md5String} - ${file.length()}")
+                    handleVideoFile(file, onMediaFile)
                 }
             }
         }
@@ -45,6 +49,7 @@ class FileSystemScanner(config: Config) {
     private fun handleImageFile(imageFile: File, onMediaFile: (MediaMeta) -> Unit) {
         val meta = MediaMeta(
             -1,
+            MediaType.Picture,
             imageFile.name,
             imageFile.length(),
             imageFile.parent,
@@ -54,6 +59,10 @@ class FileSystemScanner(config: Config) {
         )
 
         onMediaFile(meta)
+    }
+
+    private fun handleVideoFile(videoFile: File, onMediaFile: (MediaMeta) -> Unit) {
+        // TODO Write me
     }
 
 }
