@@ -24,11 +24,11 @@ val moduleProvider by lazy { ModuleProvider() }
 fun main(args: Array<String>) {
     Logger.debugLogging = true
 
-    val config = if (args.size < 2) {
+    val config = if (args.size < 1) {
         Logger.e("No configuration file defined!")
         null
     } else {
-        moduleProvider.configLoader.loadConfig(args[1])
+        moduleProvider.configLoader.loadConfig(args[0])
     }
 
     config?.also {
