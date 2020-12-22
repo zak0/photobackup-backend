@@ -25,7 +25,9 @@ class MediaRepository(
     private val uploadsDir = config.uploadsDir
 
     private var libraryScanJob: Job? = null
-    @Volatile var libraryScanStatus: LibraryScanStatus? = null
+
+    @Volatile
+    var libraryScanStatus: LibraryScanStatus? = null
 
     /**
      * Map of [MediaMeta]s, [MediaMeta.id] to [MediaMeta].
@@ -101,7 +103,11 @@ class MediaRepository(
      * Checks if [mediaFile] matches the metadata defined in [mediaMeta].
      */
     fun mediaMatchesMeta(mediaMeta: MediaMeta, mediaFile: File): Boolean {
-        return mediaFile.length() == mediaMeta.fileSize && mediaFile.md5String == mediaMeta.checksum
+        return mediaFile.length() == mediaMeta.fileSize &&
+                mediaFile.md5String.equals(
+                    mediaMeta.checksum,
+                    ignoreCase = true
+                )
     }
 
     /**
@@ -158,7 +164,11 @@ class MediaRepository(
                         removedFiles.remove(meta.checksum)
                     }
 
-                    libraryScanStatus = libraryScanStatus?.copy(mediaFilesDetected = detectedFiles, filesMoved = filesMoved, newFiles = newFiles)
+                    libraryScanStatus = libraryScanStatus?.copy(
+                        mediaFilesDetected = detectedFiles,
+                        filesMoved = filesMoved,
+                        newFiles = newFiles
+                    )
                 }
 
                 // Delete removed files from the database
@@ -169,7 +179,8 @@ class MediaRepository(
                 }
 
                 // After scan is complete, we have total numbers of removed files.
-                libraryScanStatus = libraryScanStatus?.copy(state = LibraryScanState.PROCESSING_FILES, filesRemoved = filesRemoved)
+                libraryScanStatus =
+                    libraryScanStatus?.copy(state = LibraryScanState.PROCESSING_FILES, filesRemoved = filesRemoved)
 
                 // Process files that are pending processing
                 val filesToProcess = mediaMetasCache.values.filter { it.status == MediaStatus.PROCESSING }
