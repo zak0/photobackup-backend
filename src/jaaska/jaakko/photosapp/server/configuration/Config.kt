@@ -8,5 +8,7 @@ data class Config(
     val metaRootPath: String,
     val mediaDirs: List<String>,
     val uploadsDir: String,
-    val serverPort: Int
+    val serverPort: Int,
+    val filenameDatePattern: String? = null,
+    val filenameDateRegex: String? = null
 )

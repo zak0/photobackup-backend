@@ -26,7 +26,7 @@ class ModuleProvider() {
     private val fileSystemScanner: FileSystemScanner by lazy { FileSystemScanner(config) }
     private val thumbnailGenerator: ThumbnailGenerator by lazy { ThumbnailGenerator(config) }
     private val exifProcessor: ExifProcessor by lazy { ExifProcessor() }
-    private val mediaProcessor: MediaProcessor by lazy { MediaProcessor(thumbnailGenerator, exifProcessor) }
+    private val mediaProcessor: MediaProcessor by lazy { MediaProcessor(thumbnailGenerator, exifProcessor, config) }
 
     val configLoader: ConfigLoader by lazy { ConfigLoader() }
 

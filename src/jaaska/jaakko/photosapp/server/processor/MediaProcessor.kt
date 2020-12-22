@@ -1,6 +1,9 @@
 package jaaska.jaakko.photosapp.server.processor
 
+import jaaska.jaakko.photosapp.server.configuration.Config
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
+import jaaska.jaakko.photosapp.server.extension.onNoneNull
+import jaaska.jaakko.photosapp.server.extension.regexSubstring
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
 import jaaska.jaakko.photosapp.server.model.MediaType
@@ -8,9 +11,14 @@ import jaaska.jaakko.photosapp.server.util.DateUtil
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
+import java.time.format.DateTimeFormatter
 import java.util.*
 
-class MediaProcessor(private val thumbnailGenerator: ThumbnailGenerator, private val exifProcessor: ExifProcessor) {
+class MediaProcessor(
+    private val thumbnailGenerator: ThumbnailGenerator,
+    private val exifProcessor: ExifProcessor,
+    private val config: Config
+) {
 
     /**
      * Processes the media file pointed by [mediaMeta].
@@ -35,18 +43,40 @@ class MediaProcessor(private val thumbnailGenerator: ThumbnailGenerator, private
         // Generate thumbnail
         thumbnailGenerator.generateThumbnail(mediaMeta, orientation)
 
-        // Extract datetimeoriginal either from EXIF, or if not available, fall back to file timestamps.
-        val dateTimeOriginal = exifProcessor.getDateTimeOriginal(mediaMeta) ?: getTimeFromFileTimestamps(mediaMeta)
+        // Extract datetimeoriginal either from EXIF, or if not available, attempt to parse time from filename, if
+        // filename date patterns are defined in Config.
+        val dateTimeOriginal = exifProcessor.getDateTimeOriginal(mediaMeta) ?: parseTimeFromFileName(mediaMeta) ?: ""
 
         mediaMeta.dateTimeOriginal = dateTimeOriginal
     }
 
     private fun processVideo(mediaMeta: MediaMeta) {
         // For videos, makes a best effort guess from file metadata for capture time.
-        mediaMeta.dateTimeOriginal = getTimeFromFileTimestamps(mediaMeta)
+        mediaMeta.dateTimeOriginal = parseTimeFromFileName(mediaMeta) ?: ""
 
         // Generate thumbnail
         thumbnailGenerator.generateThumbnail(mediaMeta, null)
+    }
+
+    /**
+     * Attempts to parse time from file name based on the patterns defined in configuration.
+     */
+    private fun parseTimeFromFileName(mediaMeta: MediaMeta): String? {
+        return onNoneNull(config.filenameDatePattern, config.filenameDateRegex) { pattern, regex ->
+            val rawName = mediaMeta.fileName.substringBeforeLast(".")
+
+            val datePart = rawName.regexSubstring(regex)
+            val inputFormatter = DateTimeFormatter.ofPattern(pattern)
+
+            try {
+                val inputTemporal = inputFormatter.parse(datePart)
+
+                val outputFormatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
+                outputFormatter.format(inputTemporal)
+            } catch (t: Throwable) {
+                null
+            }
+        }
     }
 
     /**

@@ -12,3 +12,5 @@ fun noneAreNull(vararg objects: Any?): Boolean {
     objects.forEach { if (it == null) return false }
     return true
 }
+
+fun <T, U, R> onNoneNull(p1: T?, p2: U?, block: (T, U) -> R?): R? = p1?.let { p2?.let { block(p1, p2) } }
