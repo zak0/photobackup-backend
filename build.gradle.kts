@@ -63,11 +63,15 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:${Versions.ktor}")
     implementation("io.ktor:ktor-serialization:${Versions.ktor}")
     implementation("org.xerial:sqlite-jdbc:3.32.3.2") // SQLite DB driver
-    implementation("net.coobird:thumbnailator:0.4.3") // For thumbnails
+    implementation("net.coobird:thumbnailator:0.4.3") // For thumbnails of pictures
+    implementation("org.jcodec:jcodec:0.2.5") // For thumbnails of videos
+    implementation("org.jcodec:jcodec-javase:0.2.5") // For thumbnails of videos
     implementation("com.drewnoakes:metadata-extractor:2.14.0") // For EXIF
+
     testImplementation("io.ktor:ktor-server-tests:${Versions.ktor}")
 }
 
+// Below are properties for the assembled JAR
 setProperty("mainClassName", "jaaska.jaakko.photosapp.server.ApplicationKt")
 group = "jaaska.jaakko"
 version = "${Versions.appVersionName}-${Versions.appVersionCode}"

@@ -1,6 +1,5 @@
 package jaaska.jaakko.photosapp.server.processor
 
-import jaaska.jaakko.photosapp.server.Logger
 import jaaska.jaakko.photosapp.server.extension.OS_PATH_SEPARATOR
 import jaaska.jaakko.photosapp.server.model.MediaMeta
 import jaaska.jaakko.photosapp.server.model.MediaStatus
@@ -27,24 +26,27 @@ class MediaProcessor(private val thumbnailGenerator: ThumbnailGenerator, private
         }
 
         // Finally mark media as ready
-        //mediaMeta.status = MediaStatus.READY
+        mediaMeta.status = MediaStatus.READY
     }
 
     private fun processPicture(mediaMeta: MediaMeta) {
         val orientation = exifProcessor.getOrientation(mediaMeta)
 
         // Generate thumbnail
-        thumbnailGenerator.generateThumbnailForMedia(mediaMeta, orientation)
+        thumbnailGenerator.generateThumbnail(mediaMeta, orientation)
 
         // Extract datetimeoriginal either from EXIF, or if not available, fall back to file timestamps.
         val dateTimeOriginal = exifProcessor.getDateTimeOriginal(mediaMeta) ?: getTimeFromFileTimestamps(mediaMeta)
 
         mediaMeta.dateTimeOriginal = dateTimeOriginal
-        mediaMeta.status = MediaStatus.READY
     }
 
     private fun processVideo(mediaMeta: MediaMeta) {
+        // For videos, makes a best effort guess from file metadata for capture time.
         mediaMeta.dateTimeOriginal = getTimeFromFileTimestamps(mediaMeta)
+
+        // Generate thumbnail
+        thumbnailGenerator.generateThumbnail(mediaMeta, null)
     }
 
     /**
