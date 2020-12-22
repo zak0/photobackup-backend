@@ -62,7 +62,18 @@ class FileSystemScanner(config: Config) {
     }
 
     private fun handleVideoFile(videoFile: File, onMediaFile: (MediaMeta) -> Unit) {
-        // TODO Write me
+        val meta = MediaMeta(
+            -1,
+            MediaType.Video,
+            videoFile.name,
+            videoFile.length(),
+            videoFile.parent,
+            videoFile.md5String,
+            "N/A", // Date will be added during processing
+            "unknown" // Status will be cleared out later on
+        )
+
+        onMediaFile(meta)
     }
 
 }
