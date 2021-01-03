@@ -23,7 +23,7 @@ class ServerInfoRepository(
     fun initIfNeeded() {
         if (!keyValueStore.contains("serverId")) {
             // Server ID is a random 64bit number, represented as HEX string
-            val serverId = Random(System.currentTimeMillis()).nextLong().toString(16)
+            val serverId = Random(System.currentTimeMillis()).nextLong().toString(16).replace("-", "0")
             keyValueStore.put(KEY_SERVER_ID, serverId)
 
             // Initial server name (this is changeable by the user later on) is first four characters of the server ID
