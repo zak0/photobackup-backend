@@ -17,6 +17,7 @@ Both this project and the corresponding client project are part of my personal c
 
 # Technical details
 
+- Written in Kotlin.
 - HTTP'ing is built with Ktor.
 
 
