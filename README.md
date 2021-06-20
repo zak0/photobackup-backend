@@ -4,6 +4,8 @@ A personal project of mine of an HTTP server for backing up photos from mobile d
 
 GitHub project for the Android client is available here -> https://github.com/zak0/photobackup-android
 
+Both this project and the corresponding client project are part of my personal campaign to lessen my dependence on cloud services and move to self-hosted solutions.
+
 **DISCLAIMER:** While I do use this to back up photos and videos from my Android phone, this project is very much in WIP state and should **NOT** be trusted by anyone for their only means of back up of precious photos.
 
 
