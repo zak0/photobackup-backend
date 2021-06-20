@@ -18,3 +18,8 @@ Both this project and the corresponding client project are part of my personal c
 # Technical details
 
 - HTTP'ing is built with Ktor.
+
+
+# License
+
+This project is licensed under the terms of **GNU AGPLv3** license. See file **LICENSE** for more details. 
