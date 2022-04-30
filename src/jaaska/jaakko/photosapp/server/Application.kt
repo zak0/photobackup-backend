@@ -1,20 +1,23 @@
 package jaaska.jaakko.photosapp.server
 
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.serialization.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import jaaska.jaakko.photosapp.server.extension.absoluteFilePath
 import jaaska.jaakko.photosapp.server.extension.copyToSuspend
 import jaaska.jaakko.photosapp.server.extension.onNoneNull
-import jaaska.jaakko.photosapp.server.model.*
+import jaaska.jaakko.photosapp.server.model.ChangePasswordBody
+import jaaska.jaakko.photosapp.server.model.MediaMeta
+import jaaska.jaakko.photosapp.server.model.MediaStatus
+import jaaska.jaakko.photosapp.server.model.User
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import java.io.File
 
@@ -67,14 +70,16 @@ fun Application.module() {
         basic("adminAuth") {
             realm = "photosapp-server"
             validate {
-                usersRepository.validateAdmin(it.name, it.password)?.let { user -> UserIdPrincipal("${user.id}") }
+                usersRepository.validateAdmin(it.name, it.password)
+                    ?.let { user -> UserIdPrincipal("${user.id}") }
             }
         }
 
         basic("usersAuth") {
             realm = "photosapp-server"
             validate {
-                usersRepository.validateUser(it.name, it.password)?.let { user -> UserIdPrincipal("${user.id}") }
+                usersRepository.validateUser(it.name, it.password)
+                    ?.let { user -> UserIdPrincipal("${user.id}") }
             }
         }
     }

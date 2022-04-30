@@ -59,9 +59,11 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:${Versions.logback}") // Logger used by Ktor
 
     implementation("io.ktor:ktor-server-core:${Versions.ktor}")
-    implementation("io.ktor:ktor-auth:${Versions.ktor}")
+    implementation("io.ktor:ktor-server-auth:${Versions.ktor}")
     implementation("io.ktor:ktor-server-netty:${Versions.ktor}")
-    implementation("io.ktor:ktor-serialization:${Versions.ktor}")
+    implementation("io.ktor:ktor-server-content-negotiation:${Versions.ktor}")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:${Versions.ktor}")
+
     implementation("org.xerial:sqlite-jdbc:3.32.3.2") // SQLite DB driver
     implementation("net.coobird:thumbnailator:0.4.3") // For thumbnails of pictures
     implementation("org.jcodec:jcodec:0.2.5") // For thumbnails of videos
