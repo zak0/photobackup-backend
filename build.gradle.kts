@@ -64,7 +64,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:${Versions.ktor}")
     implementation("io.ktor:ktor-serialization-kotlinx-json:${Versions.ktor}")
 
-    implementation("org.xerial:sqlite-jdbc:3.32.3.2") // SQLite DB driver
+    implementation("org.xerial:sqlite-jdbc:3.36.0.3") // SQLite DB driver
     implementation("net.coobird:thumbnailator:0.4.3") // For thumbnails of pictures
     implementation("org.jcodec:jcodec:0.2.5") // For thumbnails of videos
     implementation("org.jcodec:jcodec-javase:0.2.5") // For thumbnails of videos
