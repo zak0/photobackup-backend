@@ -20,6 +20,10 @@ Both this project and the corresponding client project are part of my personal c
 - Written in Kotlin.
 - HTTP'ing is built with Ktor.
 
+# Tips
+
+- To run with Gradle (useful during development), execute it with `gradle run --args "/path/to/your/config.json"`.
+- To package into a fat JAR for deployment to an external system, see https://imperceptiblethoughts.com/shadow/ for options. This project already has Gradle Shadow plugin applied.
 
 # License
 
